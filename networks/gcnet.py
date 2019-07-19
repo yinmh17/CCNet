@@ -13,7 +13,7 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, ContextBlock
+from ops import NonLocal2d, Nonlocal2d_bn, ContextBlock
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -74,7 +74,7 @@ class Bottleneck(nn.Module):
 class GCBModule(nn.Module):
     def __init__(self, in_channels, out_channels, num_classes, type='gcb'):
         super(GCBModule, self).__init__()
-        assert type in ['gcb', 'nl']
+        assert type in ['gcb', 'nl', 'nl_bn']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -82,6 +82,8 @@ class GCBModule(nn.Module):
             self.ctb = ContextBlock(inter_channels, ratio=1. / 16)
         elif type == 'nl':
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
+        elif type == 'nl_bn':
+            self.ctb = Nonlocal2d_bn(inter_channels, inter_channels // 2)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
