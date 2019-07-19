@@ -34,8 +34,8 @@ class _NonLocalNd_bn(nn.Module):
         super(_NonLocalNd_bn, self).__init__()
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
-        self.bn_query=bn_nd(planes,requires_grad=False)
-        self.bn_key=bn_nd(planes,requires_grad=False)
+        self.bn_query=bn_nd(planes,affine=False)
+        self.bn_key=bn_nd(planes,affine=False)
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
             self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
