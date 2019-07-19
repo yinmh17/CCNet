@@ -116,10 +116,10 @@ class _NonLocalNd_bn(nn.Module):
 class NonLocal2d_bn(_NonLocalNd_bn):
 
     def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False):
-        super(NonLocal2d, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
 
     def __init__(self, inplanes, planes, downsample, use_gn, lr_mult, use_out):
-        super(NonLocal3d, self).__init__(dim=3, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+        super(NonLocal3d_bn, self).__init__(dim=3, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
