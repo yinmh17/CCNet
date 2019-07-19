@@ -35,7 +35,7 @@ class ContextBlock(nn.Module):
         else:
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
         if 'channel_add' in fusion_types:
-            if onefc:
+            if one_fc:
                 self.channel_add_conv=nn.Sequential(
                     nn.Conv2d(self.inplanes, self.inplanes, kernel_size=1),
                     nn.LayerNorm([self.planes, 1, 1]))
@@ -48,7 +48,7 @@ class ContextBlock(nn.Module):
         else:
             self.channel_add_conv = None
         if 'channel_mul' in fusion_types:
-            if onefc:
+            if one_fc:
                 self.channel_add_conv=nn.Sequential(
                     nn.Conv2d(self.inplanes, self.inplanes, kernel_size=1),
                     nn.LayerNorm([self.planes, 1, 1]))
