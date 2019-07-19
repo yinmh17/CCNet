@@ -13,7 +13,7 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, Nonlocal2d_bn, ContextBlock
+from ops import NonLocal2d, NonLocal2d_bn, ContextBlock
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -83,7 +83,7 @@ class GCBModule(nn.Module):
         elif type == 'nl':
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
         elif type == 'nl_bn':
-            self.ctb = Nonlocal2d_bn(inter_channels, inter_channels // 2)
+            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
