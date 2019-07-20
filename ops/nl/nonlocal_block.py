@@ -57,9 +57,9 @@ class _NonLocalNd(nn.Module):
                 if m.bias is not None:
                     init.zeros_(m.bias)
                 m.inited = True
-        init.constant_(self.norm.weight, 0)
-        init.constant_(self.norm.bias, 0)
-        self.norm.inited = True
+        #init.constant_(self.norm.weight, 0)
+        #init.constant_(self.norm.bias, 0)
+        #self.norm.inited = True
 
     def reset_lr_mult(self, lr_mult):
         if lr_mult is not None:
