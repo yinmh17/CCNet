@@ -79,7 +79,7 @@ class GCBModule(nn.Module):
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
         if type == 'gcb':
-            self.ctb = ContextBlock(inter_channels, ratio=1. / 4, one_fc=True)
+            self.ctb = ContextBlock(inter_channels, ratio=1. / 16)
         elif type == 'nl':
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
         elif type == 'nl_bn':
