@@ -87,7 +87,7 @@ class GCBModule(nn.Module):
         elif type == 'multi':
             self.ctb = MultiheadBlock(inter_channels, ratio=1. /4, head_num=8)
         elif type == 'multi_spatial':
-            self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=16)
+            self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=16,one_fc=True)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
