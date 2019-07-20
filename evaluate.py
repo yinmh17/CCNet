@@ -27,7 +27,7 @@ DATA_LIST_PATH = './dataset/list/cityscapes/val.lst'
 IGNORE_LABEL = 255
 NUM_CLASSES = 19
 NUM_STEPS = 500 # Number of images in the validation set.
-INPUT_SIZE = '769,769'
+INPUT_SIZE = '766,766'
 RESTORE_FROM = './deeplab_resnet.ckpt'
 
 def get_arguments():
