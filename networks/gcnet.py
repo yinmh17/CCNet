@@ -85,7 +85,7 @@ class GCBModule(nn.Module):
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2)
         elif type == 'multi':
-            self.ctb = MultiheadBlock(inter_channels, ratio=1. /4, head_num=8)
+            self.ctb = MultiheadBlock(inter_channels, ratio=1. /4, one_fc=True, head_num=8, pre_group=1, post_group=8)
         elif type == 'multi_spatial':
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=16)
         else:
