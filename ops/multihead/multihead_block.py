@@ -31,7 +31,7 @@ class MultiheadBlock(nn.Module):
         self.fusion_types = fusion_types
         self.head_num = head_num
         if pooling_type == 'att':
-            self.conv_mask = nn.Conv2d(inplanes, self.head_num, kernel_size=1, groups=self.head_num)
+            self.conv_mask = nn.Conv2d(inplanes, self.head_num, kernel_size=1)
             self.softmax = nn.Softmax(dim=2)
         else:
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
