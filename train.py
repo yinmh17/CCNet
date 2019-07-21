@@ -13,7 +13,7 @@ import sys
 import os
 from tqdm import tqdm
 import os.path as osp
-from networks.deeplabv3 import Res_Deeplab
+from networks.pspnet import Res_Deeplab
 from dataset.datasets import CSDataSet
 #import matplotlib.pyplot as plt
 import random
