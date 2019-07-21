@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
-from networks.gcnet import Res_Deeplab
+from networks.deeplabv3 import Res_Deeplab
 from dataset.datasets import CSDataSet
 from collections import OrderedDict
 import os
@@ -116,7 +116,7 @@ def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence)
             # plt.show()
             tile_counter += 1
             print("Predicting tile %i" % tile_counter)
-            padded_prediction = net(Variable(torch.from_numpy(padded_img), volatile=True).cuda(), recurrence)
+            padded_prediction = net(Variable(torch.from_numpy(padded_img), volatile=True).cuda())
             if isinstance(padded_prediction, list):
                 padded_prediction = padded_prediction[0]
             padded_prediction = interp(padded_prediction).cpu().data[0].numpy().transpose(1,2,0)
@@ -134,7 +134,7 @@ def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence)
 def predict_whole(net, image, tile_size, recurrence):
     image = torch.from_numpy(image)
     interp = nn.Upsample(size=tile_size, mode='bilinear', align_corners=True)
-    prediction = net(image.cuda(), recurrence)
+    prediction = net(image.cuda())
     if isinstance(prediction, list):
         prediction = prediction[0]
     prediction = interp(prediction).cpu().data[0].numpy().transpose(1,2,0)
