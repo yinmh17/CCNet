@@ -13,7 +13,7 @@ import sys
 import os
 from tqdm import tqdm
 import os.path as osp
-from networks.gcnet import Res_Deeplab
+from networks.deeplabv3 import Res_Deeplab
 from dataset.datasets import CSDataSet
 #import matplotlib.pyplot as plt
 import random
@@ -206,7 +206,7 @@ def main():
 
         optimizer.zero_grad()
         lr = adjust_learning_rate(optimizer, i_iter)
-        preds = model(images, args.recurrence)
+        preds = model(images)
 
         loss = criterion(preds, labels)
         loss.backward()
