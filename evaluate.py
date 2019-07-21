@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
-from networks.deeplabv3 import Res_Deeplab
+from networks.pspnet import Res_Deeplab
 from dataset.datasets import CSDataSet
 from collections import OrderedDict
 import os
