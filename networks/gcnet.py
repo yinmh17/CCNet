@@ -72,7 +72,7 @@ class Bottleneck(nn.Module):
 
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='nl', 
+    def __init__(self, in_channels, out_channels, num_classes, type='multi', 
                  ratio=1. /4, one_fc=True, head_num=8, pre_group=1, post_group=8):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial']
