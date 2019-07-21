@@ -72,8 +72,7 @@ class Bottleneck(nn.Module):
 
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='multi', 
-                 ratio=1. /4, one_fc=True, head_num=8, pre_group=1, post_group=8):
+    def __init__(self, in_channels, out_channels, num_classes, type='multi'):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial']
         inter_channels = in_channels // 4
@@ -86,10 +85,10 @@ class GCBModule(nn.Module):
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2)
         elif type == 'multi':
-            self.ctb = MultiheadBlock(inter_channels, ratio, one_fc=one_fc, 
-                                      head_num=head_num, pre_group=pre_group, post_group=post_group)
+            self.ctb = MultiheadBlock(inter_channels, ratio=1./4, one_fc=True, 
+                                      head_num=8, pre_group=1, post_group=8)
         elif type == 'multi_spatial':
-            self.ctb = MultiheadSpatialBlock(inter_channels, ratio=ratio, head_num=head_num)
+            self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
