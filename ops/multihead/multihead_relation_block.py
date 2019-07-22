@@ -116,7 +116,7 @@ class MultiheadRelationBlock(nn.Module):
         
         #[H, W, 2]
         mesh=torch.cat((meshH,meshW),2)
-        mesh=mesh.view(1,1,height,width,2).float()
+        mesh=mesh.view(1,1,height,width,2).float().cuda()
         context_mask=context_mask.view(batch,head_num,height,width,1)
         
         #[B, M, H, W, 2] --> [B, M, 2]
@@ -127,9 +127,9 @@ class MultiheadRelationBlock(nn.Module):
         
         #[B, M, M, 1]
         delta_x1=torch.clamp(cx.unsqueeze(2)-cx.unsqueeze(1), min=0).unsqueeze(-1)
-        delta_x2=-torch.clamp(cx.unsqueeze(1)-cx.unsqueeze(2), max=0).unsqueeze(-1)
+        delta_x2=torch.clamp(cx.unsqueeze(1)-cx.unsqueeze(2), min=0).unsqueeze(-1)
         delta_y1=torch.clamp(cy.unsqueeze(2)-cy.unsqueeze(1), min=0).unsqueeze(-1)
-        delta_y2=-torch.clamp(cy.unsqueeze(1)-cy.unsqueeze(2), max=0).unsqueeze(-1)
+        delta_y2=torch.clamp(cy.unsqueeze(1)-cy.unsqueeze(2), min=0).unsqueeze(-1)
         
         #[B, M, M, 4, 1]
         position_mat=torch.cat([delta_x1,delta_x2,delta_y1,delta_y2],dim=3)
