@@ -118,7 +118,7 @@ class MultiRelationBlock(nn.Module):
         
         #[H, W, 2]
         mesh=torch.cat((meshH,meshW),2)
-        mesh=mesh.view(1,1,height,width,2).float()
+        mesh=mesh.view(1,1,height,width,2).float().cuda()
         context_mask=context_mask.view(batch,mask_num,height,width,1)
         
         #[B, M, H, W, 2] --> [B, M, 2]
