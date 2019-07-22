@@ -140,7 +140,7 @@ class MultiheadRelationBlock(nn.Module):
         dim_mat = feat_range / (dim_g / 8)
         dim_mat = 1. / (torch.pow(wave_len, dim_mat))
         #[1, 1, 1, 1, dim_g/8]
-        dim_mat = dim_mat.view(1, 1, 1, 1, -1)
+        dim_mat = dim_mat.view(1, 1, 1, 1, -1).cuda()
         
         #[B, M, M, 4, dim_g/8]
         mul_mat = position_mat * dim_mat
