@@ -33,7 +33,8 @@ def conv3x3(in_planes, out_planes, stride=1):
 
 class Bottleneck(nn.Module):
     expansion = 4
-    def __init__(self, inplanes, planes, stride=1, dilation=1, downsample=None, fist_dilation=1, multi_grid=1):
+    def __init__(self, inplanes, planes, stride=1, dilation=1, downsample=None, 
+                 fist_dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = BatchNorm2d(planes)
@@ -47,6 +48,27 @@ class Bottleneck(nn.Module):
         self.downsample = downsample
         self.dilation = dilation
         self.stride = stride
+        self.expansion=4
+        
+        self.with_att=with_att
+        self.att=att
+        self.att_pos=att_pos
+        
+        if self.att_pos == 'after_3x3':
+            att_inplanes = planes
+        else:
+            att_inplanes = planes * self.expansion
+            
+        if self.with_att:
+            if self.att == 'ct':
+                self.context_block = ContextBlock(att_inplanes, ratio=1./4)
+            elif self.att == 'nl':
+                self.context_block = NonLocal2d(att_channels, att_channels // 2)
+            elif self.att == 'multi_gc':
+                self.context_block =  MultiheadBlock(att_channels, ratio=1./4, one_fc=True, 
+                                                     head_num=8, pre_group=1, post_group=8)
+            else:
+                self.context_block=None
 
     def forward(self, x):
         residual = x
@@ -58,18 +80,26 @@ class Bottleneck(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
+        if self.with_att:
+            if self.att_pos == 'after_3x3':
+                out = self.context_block(out)
 
         out = self.conv3(out)
         out = self.bn3(out)
+        if self.with_att:
+            if self.att_pos == 'after_1x1':
+                out = self.context_block(out)
 
         if self.downsample is not None:
             residual = self.downsample(x)
 
         out = out + residual      
         out = self.relu_inplace(out)
+        if self.with_att:
+            if self.att_pos == 'after_add':
+                out = self.context_block(out)
 
         return out
-
 
 class GCBModule(nn.Module):
     def __init__(self, in_channels, out_channels, num_classes, type='nl'):
@@ -113,7 +143,7 @@ class GCBModule(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes):
+    def __init__(self, block, layers, num_classes, with_att, att, att_stage, att_pos):
         self.inplanes = 128
         super(ResNet, self).__init__()
         self.conv1 = conv3x3(3, 64, stride=2)
@@ -129,10 +159,10 @@ class ResNet(nn.Module):
 
         self.relu = nn.ReLU(inplace=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4, multi_grid=(1,1,1))
+        self.layer1 = self._make_layer(block, 64, layers[0], with_att=with_att*att_stage[0], att=att, att_pos=att_pos)
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, with_att=with_att*att_stage[1], att=att, att_pos=att_pos)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2, with_att=with_att*att_stage[2], att=att, att_pos=att_pos)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4, multi_grid=(1,1,1), with_att=with_att*att_stage[3], att=att, att_pos=att_pos)
         #self.layer5 = PSPModule(2048, 512)
         self.head = GCBModule(2048, 512, num_classes)
 
@@ -142,8 +172,8 @@ class ResNet(nn.Module):
             nn.Dropout2d(0.1),
             nn.Conv2d(512, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
             )
-
-    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, multi_grid=1):
+        
+    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -153,10 +183,12 @@ class ResNet(nn.Module):
 
         layers = []
         generate_multi_grid = lambda index, grids: grids[index%len(grids)] if isinstance(grids, tuple) else 1
-        layers.append(block(self.inplanes, planes, stride,dilation=dilation, downsample=downsample, multi_grid=generate_multi_grid(0, multi_grid)))
+        layers.append(block(self.inplanes, planes, stride,dilation=dilation, downsample=downsample, 
+                            multi_grid=generate_multi_grid(0, multi_grid), with_att=with_att, att=att, att_pos=att_pos))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, dilation=dilation, multi_grid=generate_multi_grid(i, multi_grid)))
+            layers.append(block(self.inplanes, planes, dilation=dilation, 
+                                multi_grid=generate_multi_grid(i, multi_grid), with_att=with_att, att=att, att_pos=att_pos))
 
         return nn.Sequential(*layers)
 
@@ -175,6 +207,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes)
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='ct', att_stage=[False, True, True, True], att_pos='after_1x1')
     return model
-
