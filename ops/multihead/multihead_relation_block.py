@@ -2,6 +2,7 @@
 import torch
 from mmcv.cnn import constant_init, kaiming_init
 from torch import nn
+import numpy as np
 
 def last_zero_init(m):
     if isinstance(m, nn.Sequential):
