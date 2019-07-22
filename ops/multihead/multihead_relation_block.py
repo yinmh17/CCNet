@@ -55,20 +55,22 @@ class MultiheadRelationBlock(nn.Module):
             self.LinearQ = nn.Linear(int(inplanes/pre_group), key_feature_dim, bias=True)
             self.LinearV = nn.Linear(int(inplanes/pre_group), key_feature_dim, bias=True)
             self.relu = nn.ReLU(inplace=True)
+            self.conv_inplanes = self.head_num*self.dim_k
         else:
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
+            self.conv_inplanes = inplanes
         if 'channel_add' in fusion_types:
             if one_fc:
                 if norm == 'ln':
                     self.channel_add_conv=nn.Sequential(
-                        nn.Conv2d(self.head_num*self.dim_k, self.inplanes, kernel_size=1, groups=self.post_group),
+                        nn.Conv2d(self.conv_inplanes, self.inplanes, kernel_size=1, groups=self.post_group),
                         nn.LayerNorm([self.inplanes, 1, 1]))
                 else:
                     self.channel_add_conv=nn.Sequential(
-                        nn.Conv2d(self.head_num*self.dim_k, self.inplanes, kernel_size=1, groups=self.post_group),)
+                        nn.Conv2d(self.conv_inplanes, self.inplanes, kernel_size=1, groups=self.post_group),)
             else:
                 self.channel_add_conv = nn.Sequential(
-                    nn.Conv2d(self.head_num*self.dim_k, self.planes, kernel_size=1, groups=self.post_group),
+                    nn.Conv2d(self.conv_inplanes, self.planes, kernel_size=1, groups=self.post_group),
                     nn.LayerNorm([self.planes, 1, 1]),
                     nn.ReLU(inplace=True),  # yapf: disable
                     nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
@@ -80,14 +82,14 @@ class MultiheadRelationBlock(nn.Module):
             if one_fc:
                 if norm == 'ln':
                     self.channel_mul_conv=nn.Sequential(
-                        nn.Conv2d(int(self.inplanes*self.head_num/self.pre_group), self.inplanes, kernel_size=1, groups=self.post_group),
+                        nn.Conv2d(self.conv_inplanes, self.inplanes, kernel_size=1, groups=self.post_group),
                         nn.LayerNorm([self.inplanes, 1, 1]))
                 else:
                     self.channel_mul_conv=nn.Sequential(
-                        nn.Conv2d(int(self.inplanes*self.head_num/self.pre_group), self.inplanes, kernel_size=1, groups=self.post_group),)
+                        nn.Conv2d(self.conv_inplanes, self.inplanes, kernel_size=1, groups=self.post_group),)
             else:
                 self.channel_mul_conv = nn.Sequential(
-                    nn.Conv2d(int(self.inplanes*self.head_num/self.pre_group), self.planes, kernel_size=1, groups=self.post_group),
+                    nn.Conv2d(self.conv_inplanes, self.planes, kernel_size=1, groups=self.post_group),
                     nn.LayerNorm([self.planes, 1, 1]),
                     nn.ReLU(inplace=True),  # yapf: disable
                     nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
