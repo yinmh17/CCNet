@@ -213,5 +213,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-            model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='ct', att_stage=[False, False, True, True], att_pos='after_1x1')
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='ct', att_stage=[False, False, True, True], att_pos='after_1x1')
     return model
