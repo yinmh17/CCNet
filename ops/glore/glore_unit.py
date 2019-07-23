@@ -22,7 +22,7 @@ class GCN(nn.Module):
         return h
 
 
-class GloRe_Unit(nn.Module):
+class GloreUnit(nn.Module):
     """
     Graph-based Global Reasoning Unit
     Parameter:
@@ -32,7 +32,7 @@ class GloRe_Unit(nn.Module):
                  ConvNd=nn.Conv2d,
                  BatchNormNd=nn.BatchNorm2d,
                  normalize=False):
-        super(GloRe_Unit, self).__init__()
+        super(GloreUnit, self).__init__()
         
         self.normalize = normalize
         self.num_s = int(2 * num_mid)
