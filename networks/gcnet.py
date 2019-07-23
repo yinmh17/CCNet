@@ -102,7 +102,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='multihead_relation'):
+    def __init__(self, in_channels, out_channels, num_classes, type='gcb'):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation']
         inter_channels = in_channels // 4
@@ -213,5 +213,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='ct', att_stage=[False, True, True, True], att_pos='after_1x1')
+            model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='ct', att_stage=[False, False, True, True], att_pos='after_1x1')
     return model
