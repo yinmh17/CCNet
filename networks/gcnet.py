@@ -67,6 +67,8 @@ class Bottleneck(nn.Module):
             elif self.att == 'multi_gc':
                 self.context_block =  MultiheadBlock(att_channels, ratio=1./4, one_fc=True, 
                                                      head_num=8, pre_group=1, post_group=8)
+            elif self.att == 'glore':
+                self.context_block = GloreUnit(att_channels, att_channels//4)
             else:
                 self.context_block=None
 
