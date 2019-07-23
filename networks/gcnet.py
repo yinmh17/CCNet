@@ -13,7 +13,7 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock, MultiheadRelationBlock
+from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock, MultiheadRelationBlock, GloreUnit
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -102,9 +102,9 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='gcb'):
+    def __init__(self, in_channels, out_channels, num_classes, type='glore'):
         super(GCBModule, self).__init__()
-        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation']
+        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -125,6 +125,8 @@ class GCBModule(nn.Module):
                                           pre_group=1, post_group=1, geo_feature_dim=64, key_feature_dim=64)
         elif type == 'multi_spatial':
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
+        elif type == 'glore':
+            self.ctb = GloreUnit(inter_channels, inter_channels//4)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
@@ -213,5 +215,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='ct', att_stage=[False, True, True, True], att_pos='after_1x1')
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='ct', att_stage=[False, True, True, True], att_pos='after_1x1')
     return model
