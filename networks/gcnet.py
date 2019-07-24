@@ -85,14 +85,21 @@ class Bottleneck(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
-        if self.with_att:
-            if self.att_pos == 'after_3x3':
+        if self.with_att :
+            if self.att != 'glore':
+                if self.att_pos == 'after_3x3':
+                    out = self.context_block(out)
+            elif self.att_pos == 'after_3x3' and self.rank in self.att_loc:
                 out = self.context_block(out)
+                
 
         out = self.conv3(out)
         out = self.bn3(out)
-        if self.with_att:
-            if self.att_pos == 'after_1x1':
+        if self.with_att :
+            if self.att != 'glore':
+                if self.att_pos == 'after_1x1':
+                    out = self.context_block(out)
+            elif self.att_pos == 'after_1x1' and self.rank in self.att_loc:
                 out = self.context_block(out)
 
         if self.downsample is not None:
@@ -100,8 +107,11 @@ class Bottleneck(nn.Module):
 
         out = out + residual      
         out = self.relu_inplace(out)
-        if self.with_att:
-            if self.att_pos == 'after_add':
+        if self.with_att :
+            if self.att != 'glore':
+                if self.att_pos == 'after_add':
+                    out = self.context_block(out)
+            elif self.att_pos == 'after_add' and self.rank in self.att_loc:
                 out = self.context_block(out)
 
         return out
