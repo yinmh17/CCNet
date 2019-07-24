@@ -66,12 +66,12 @@ class Bottleneck(nn.Module):
             if self.att == 'ct':
                 self.context_block = ContextBlock(att_inplanes, ratio=1./4, one_fc=True)
             elif self.att == 'nl':
-                self.context_block = NonLocal2d(att_channels, att_channels // 2)
+                self.context_block = NonLocal2d(att_inplanes, att_channels // 2)
             elif self.att == 'multi_gc':
-                self.context_block =  MultiheadBlock(att_channels, ratio=1./4, one_fc=True, 
+                self.context_block =  MultiheadBlock(att_inplanes, ratio=1./4, one_fc=True, 
                                                      head_num=8, pre_group=1, post_group=8)
             elif self.att == 'glore' and self.rank in self.att_loc:
-                self.context_block = GloreUnit(att_channels, att_channels//4)
+                self.context_block = GloreUnit(att_inplanes, att_inplanes//4)
             else:
                 self.context_block=None
 
@@ -224,5 +224,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='glore', att_stage=[False, True, True, False], att_pos='after_1x1', att_location=[[],[0,2],[5,11,17],[]])
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
     return model
