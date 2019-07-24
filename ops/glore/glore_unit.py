@@ -20,6 +20,45 @@ class GCN(nn.Module):
         # (n, num_state, num_node) -> (n, num_state, num_node)
         h = self.conv2(self.relu(h))
         return h
+    
+class GCNnode(nn.Module):
+    """ Graph convolution unit (single layer)
+    """
+
+    def __init__(self, num_state, num_node, bias=False):
+        super(GCNnode, self).__init__()
+        self.conv1 = nn.Conv1d(num_node, num_node, kernel_size=1)
+        #self.relu = nn.ReLU(inplace=True)
+        #self.conv2 = nn.Conv1d(num_state, num_state, kernel_size=1, bias=bias)
+
+    def forward(self, x):
+        # (n, num_state, num_node) -> (n, num_node, num_state)
+        #                          -> (n, num_state, num_node)
+        h = self.conv1(x.permute(0, 2, 1).contiguous()).permute(0, 2, 1)
+        h = h + x
+        # (n, num_state, num_node) -> (n, num_state, num_node)
+        #h = self.conv2(self.relu(h))
+        return h
+    
+class GCNstate(nn.Module):
+    """ Graph convolution unit (single layer)
+    """
+
+    def __init__(self, num_state, num_node, bias=False):
+        super(GCNstate, self).__init__()
+        #self.conv1 = nn.Conv1d(num_node, num_node, kernel_size=1)
+        #self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv1d(num_state, num_state, kernel_size=1, bias=bias)
+
+    def forward(self, x):
+        # (n, num_state, num_node) -> (n, num_node, num_state)
+        #                          -> (n, num_state, num_node)
+        #h = self.conv1(x.permute(0, 2, 1).contiguous()).permute(0, 2, 1)
+        #h = h + x
+        # (n, num_state, num_node) -> (n, num_state, num_node)
+        h = self.conv2(x)
+        h = h + x
+        return h
 
 
 class GloreUnit(nn.Module):
@@ -31,10 +70,13 @@ class GloreUnit(nn.Module):
     def __init__(self, num_in, num_mid, 
                  ConvNd=nn.Conv2d,
                  BatchNormNd=nn.BatchNorm2d,
-                 normalize=False):
+                 normalize=False,
+                 interact='graph'):
         super(GloreUnit, self).__init__()
         
+        assert interact in ['graph', 'node', 'state', 'no']
         self.normalize = normalize
+        self.interact = interact
         self.num_s = int(2 * num_mid)
         self.num_n = int(1 * num_mid)
 
@@ -44,7 +86,12 @@ class GloreUnit(nn.Module):
         self.conv_proj = ConvNd(num_in, self.num_n, kernel_size=1)
         # ----------
         # reasoning via graph convolution
-        self.gcn = GCN(num_state=self.num_s, num_node=self.num_n)
+        if self.interact == 'graph':
+            self.gcn = GCN(num_state=self.num_s, num_node=self.num_n)
+        elif self.interact == 'node':
+            self.gcn = GCNnode(num_state=self.num_s, num_node=self.num_n)
+        elif self.interact == 'state':
+            self.gcn = GCNnode(num_state=self.num_s, num_node=self.num_n)
         # ----------
         # extend dimension
         self.conv_extend = ConvNd(self.num_s, num_in, kernel_size=1, bias=False)
@@ -79,7 +126,10 @@ class GloreUnit(nn.Module):
             x_n_state = x_n_state * (1. / x_state_reshaped.size(2))
 
         # reasoning: (n, num_state, num_node) -> (n, num_state, num_node)
-        x_n_rel = self.gcn(x_n_state)
+        if self.interact != 'no':
+            x_n_rel = self.gcn(x_n_state)
+        else:
+            x_n_rel = x_n_state
 
         # reverse projection: interaction space -> coordinate space
         # (n, num_state, num_node) x (n, num_node, h*w) --> (n, num_state, h*w)
