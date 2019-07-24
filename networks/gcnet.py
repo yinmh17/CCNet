@@ -130,7 +130,7 @@ class GCBModule(nn.Module):
         elif type == 'glore':
             self.ctb = GloreUnit(inter_channels, inter_channels//4)
         elif type == 'proj_multi':
-            self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1)
+            self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
