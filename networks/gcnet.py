@@ -35,8 +35,9 @@ def conv3x3(in_planes, out_planes, stride=1):
 class Bottleneck(nn.Module):
     expansion = 4
     def __init__(self, inplanes, planes, stride=1, dilation=1, downsample=None, 
-                 fist_dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None):
+                 fist_dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None, att_loc=None, rank=None):
         super(Bottleneck, self).__init__()
+        self.rank=rank
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
@@ -54,6 +55,7 @@ class Bottleneck(nn.Module):
         self.with_att=with_att
         self.att=att
         self.att_pos=att_pos
+        self.att_loc=att_loc
         
         if self.att_pos == 'after_3x3':
             att_inplanes = planes
@@ -68,7 +70,7 @@ class Bottleneck(nn.Module):
             elif self.att == 'multi_gc':
                 self.context_block =  MultiheadBlock(att_channels, ratio=1./4, one_fc=True, 
                                                      head_num=8, pre_group=1, post_group=8)
-            elif self.att == 'glore':
+            elif self.att == 'glore' and self.rank in self.att_loc:
                 self.context_block = GloreUnit(att_channels, att_channels//4)
             else:
                 self.context_block=None
@@ -158,7 +160,7 @@ class GCBModule(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes, with_att, att, att_stage, att_pos):
+    def __init__(self, block, layers, num_classes, with_att, att, att_stage, att_pos, att_location):
         self.inplanes = 128
         super(ResNet, self).__init__()
         self.conv1 = conv3x3(3, 64, stride=2)
@@ -174,10 +176,10 @@ class ResNet(nn.Module):
 
         self.relu = nn.ReLU(inplace=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
-        self.layer1 = self._make_layer(block, 64, layers[0], with_att=with_att*att_stage[0], att=att, att_pos=att_pos)
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, with_att=with_att*att_stage[1], att=att, att_pos=att_pos)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2, with_att=with_att*att_stage[2], att=att, att_pos=att_pos)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4, multi_grid=(1,1,1), with_att=with_att*att_stage[3], att=att, att_pos=att_pos)
+        self.layer1 = self._make_layer(block, 64, layers[0], with_att=with_att*att_stage[0], att=att, att_pos=att_pos, att_loc=att_location[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, with_att=with_att*att_stage[1], att=att, att_pos=att_pos, att_loc=att_location[1])
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2, with_att=with_att*att_stage[2], att=att, att_pos=att_pos, att_loc=att_location[2])
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4, multi_grid=(1,1,1), with_att=with_att*att_stage[3], att=att, att_pos=att_pos, att_loc=att_location[3])
         #self.layer5 = PSPModule(2048, 512)
         self.head = GCBModule(2048, 512, num_classes)
 
@@ -188,7 +190,7 @@ class ResNet(nn.Module):
             nn.Conv2d(512, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
             )
         
-    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None):
+    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, multi_grid=1, with_att=False, att=None, att_pos=None, att_loc=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -199,11 +201,11 @@ class ResNet(nn.Module):
         layers = []
         generate_multi_grid = lambda index, grids: grids[index%len(grids)] if isinstance(grids, tuple) else 1
         layers.append(block(self.inplanes, planes, stride,dilation=dilation, downsample=downsample, 
-                            multi_grid=generate_multi_grid(0, multi_grid), with_att=with_att, att=att, att_pos=att_pos))
+                            multi_grid=generate_multi_grid(0, multi_grid), with_att=with_att, att=att, att_pos=att_pos, att_loc=att_loc, rank=0))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes, dilation=dilation, 
-                                multi_grid=generate_multi_grid(i, multi_grid), with_att=with_att, att=att, att_pos=att_pos))
+                                multi_grid=generate_multi_grid(i, multi_grid), with_att=with_att, att=att, att_pos=att_pos, att_loc=att_loc, rank=i))
 
         return nn.Sequential(*layers)
 
@@ -222,5 +224,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='ct', att_stage=[False, True, True, True], att_pos='after_1x1')
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='glore', att_stage=[False, True, True, False], att_pos='after_1x1', att_location=[[],[0,2],[5,11,17],[])
     return model
