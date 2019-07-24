@@ -39,8 +39,6 @@ class ProjSpatialBlock(nn.Module):
         self.proj_num = proj_num
         self.pre_group = pre_group
         self.post_group = post_group
-        self.height = height
-        self.width = height
         self.share_proj = share_proj
         if pooling_type == 'att':
             self.conv_mask = nn.Conv2d(inplanes, self.mask_num, kernel_size=1, groups=self.pre_group)
