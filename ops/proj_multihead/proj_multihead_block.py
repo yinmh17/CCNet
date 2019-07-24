@@ -21,8 +21,8 @@ class ProjMultiheadBlock(nn.Module):
                  pre_group=1,
                  post_group=1,
                  norm='ln',
-                 height=96,
-                 width=96):
+                 height=97,
+                 width=97):
         super(ProjMultiheadBlock, self).__init__()
         assert pooling_type in ['avg', 'att']
         assert norm in [None, 'bn', 'ln']
