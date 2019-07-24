@@ -117,7 +117,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='glore'):
+    def __init__(self, in_channels, out_channels, num_classes, type='proj_spatial'):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
@@ -145,7 +145,7 @@ class GCBModule(nn.Module):
         elif type == 'proj_multi':
             self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         elif type == 'proj_spatial':
-            self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=False)
+            self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=True)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
@@ -234,5 +234,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=True, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
     return model
