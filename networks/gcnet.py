@@ -13,7 +13,7 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock, MultiheadRelationBlock, GloreUnit
+from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock, MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -104,9 +104,9 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='glore'):
+    def __init__(self, in_channels, out_channels, num_classes, type='proj_multi'):
         super(GCBModule, self).__init__()
-        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore']
+        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -129,6 +129,8 @@ class GCBModule(nn.Module):
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         elif type == 'glore':
             self.ctb = GloreUnit(inter_channels, inter_channels//4)
+        elif type == 'proj_multi':
+            self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
