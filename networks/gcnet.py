@@ -117,7 +117,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='proj_spatial'):
+    def __init__(self, in_channels, out_channels, num_classes, type='glore'):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
@@ -141,7 +141,7 @@ class GCBModule(nn.Module):
         elif type == 'multi_spatial':
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         elif type == 'glore':
-            self.ctb = GloreUnit(inter_channels, inter_channels//4)
+            self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'no')
         elif type == 'proj_multi':
             self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         elif type == 'proj_spatial':
