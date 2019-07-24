@@ -6,5 +6,5 @@ from .proj_multihead import ProjMultiheadBlock, ProjSpatialBlock
 
 __all__ = [
     'NonLocal2d', 'NonLocal2d_bn', 'ContextBlock', 'MultiheadBlock', 'MultiheadSpatialBlock', 'MultiRelationBlock', 
-    'MultiheadRelationBlock', 'GloreUnit', 'ProjMultiheadBlock',
+    'MultiheadRelationBlock', 'GloreUnit', 'ProjMultiheadBlock', 'ProjSpatialBlock',
 ]
