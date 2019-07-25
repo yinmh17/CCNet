@@ -107,7 +107,7 @@ class ProjMultiheadBlock(nn.Module):
             #[B, HW, C, 1]
             input_x=input_x.permute(0,2,1).view(batch, height*width, channel, 1)
             #[B, HW, M]
-            context_mask=torch.matmul(x_proj_vec, input_x).squeeze()
+            context_mask=torch.matmul(x_proj_vec, input_x).view(batch, height*width, self.mask_num)
             #[B, M, HW, 1]
             context_mask=context_mask.permute(0,2,1).unsqueeze(-1)
             context_mask=self.softmax(context_mask)
