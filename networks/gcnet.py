@@ -141,7 +141,7 @@ class GCBModule(nn.Module):
         elif type == 'multi_spatial':
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         elif type == 'glore':
-            self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'node')
+            self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'state')
         elif type == 'proj_multi':
             self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         elif type == 'proj_spatial':
