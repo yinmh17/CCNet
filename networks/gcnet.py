@@ -117,7 +117,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='proj_spatial'):
+    def __init__(self, in_channels, out_channels, num_classes, type=None):
         super(GCBModule, self).__init__()
         assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
