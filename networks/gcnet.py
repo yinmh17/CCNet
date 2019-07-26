@@ -117,9 +117,9 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type=None):
+    def __init__(self, in_channels, out_channels, num_classes, type='baseline'):
         super(GCBModule, self).__init__()
-        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
+        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -146,7 +146,7 @@ class GCBModule(nn.Module):
             self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         elif type == 'proj_spatial':
             self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=True)
-        else:
+        elif type == 'baseline':
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
