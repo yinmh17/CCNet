@@ -22,7 +22,9 @@ class ProjSpatialBlock(nn.Module):
                  pre_group=1,
                  post_group=1,
                  norm='ln',
-                 share_proj=False):
+                 share_proj=False,
+                 softmax_loc=[1,2]
+                 ):
         super(ProjSpatialBlock, self).__init__()
         assert pooling_type in ['avg', 'att']
         assert norm in [None, 'bn', 'ln']
@@ -40,12 +42,18 @@ class ProjSpatialBlock(nn.Module):
         self.pre_group = pre_group
         self.post_group = post_group
         self.share_proj = share_proj
+        self.softmax_loc = softmax_loc
         if pooling_type == 'att':
             self.conv_mask = nn.Conv2d(inplanes, self.mask_num, kernel_size=1, groups=self.pre_group)
             self.conv_mask_proj = nn.Conv2d(inplanes, self.proj_num, kernel_size=1, groups=self.pre_group)
             if self.share_proj == False:
                 self.conv_value_proj = nn.Conv2d(inplanes, self.proj_num, kernel_size=1, groups=self.pre_group)
-            self.softmax = nn.Softmax(dim=2)
+            if 1 in self.softmax_loc:
+                self.softmax1 = nn.Softmax(dim=2)
+            if 2 in self.softmax_loc:
+                self.softmax2 = nn.Softmax(dim=2)
+            if 3 in self.softmax_loc:
+                self.softmax3 = nn.Softmax(dim=2)
         else:
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
         if 'channel_add' in fusion_types:
@@ -119,12 +127,19 @@ class ProjSpatialBlock(nn.Module):
             
             #[B, M, HW]
             context_mask=self.conv_mask(x).view(batch, self.mask_num, height*width)
+            
+            if 1 in self.softmax_loc:
+                #[B, M, HW]
+                context_mask=self.softmax1(context_mask)
+                
             #[B, M, HW] X [B, HW, P] --> [B, M, P]
             context_mask=torch.matmul(context_mask, x_mask_proj.permute(0,2,1))
             #[B, M, P]
             context_mask=context_mask*(1. / height)
-            #[B, M, P]
-            context_mask=self.softmax(context_mask)
+            
+            if 2 in self.softmax_loc:
+                #[B, M, P]
+                context_mask=self.softmax2(context_mask)
             
             #[B, M, HW]
             context=x.view(batch, channel, height*width)
