@@ -134,8 +134,9 @@ class ProjSpatialBlock(nn.Module):
                 
             #[B, M, HW] X [B, HW, P] --> [B, M, P]
             context_mask=torch.matmul(context_mask, x_mask_proj.permute(0,2,1))
-            #[B, M, P]
-            context_mask=context_mask*(1. / height)
+            if 1 not in self.softmax_loc:
+                #[B, M, P]
+                context_mask=context_mask*(1. / height/width)
             
             if 2 in self.softmax_loc:
                 #[B, M, P]
