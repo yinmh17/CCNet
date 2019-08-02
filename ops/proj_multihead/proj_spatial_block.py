@@ -23,7 +23,8 @@ class ProjSpatialBlock(nn.Module):
                  post_group=1,
                  norm='ln',
                  share_proj=False,
-                 softmax_loc=[1,2]
+                 softmax_loc=[1,2],
+                 scale=16
                  ):
         super(ProjSpatialBlock, self).__init__()
         assert pooling_type in ['avg', 'att']
