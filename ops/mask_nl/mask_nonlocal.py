@@ -24,7 +24,7 @@ class MaskNonLocal2d(nn.Module):
         if use_query_mask==True:
             self.conv_query_mask=conv_nd(inplanes, 1, kernel_size=1)
         if use_key_mask==True:
-            self.conv_key_mask=conv_nd(inplanes, 1, kernal_size=1)
+            self.conv_key_mask=conv_nd(inplanes, 1, kernel_size=1)
         if mask_type=='sigmoid':
             self.sigmoid_key=nn.Sigmoid(dim=2)
             self.sigmoid_query=nn.Sigmoid(dim=1)
