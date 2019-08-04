@@ -27,8 +27,8 @@ class MaskNonLocal2d(nn.Module):
         if use_key_mask==True:
             self.conv_key_mask=conv_nd(inplanes, 1, kernel_size=1)
         if mask_type=='sigmoid':
-            self.sigmoid_key=nn.Sigmoid(dim=2)
-            self.sigmoid_query=nn.Sigmoid(dim=1)
+            self.sigmoid_key=nn.Sigmoid()
+            self.sigmoid_query=nn.Sigmoid()
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
             self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
@@ -110,10 +110,10 @@ class MaskNonLocal2d(nn.Module):
             
         if self.mask_type == 'sigmoid':
             sim_map = self.softmax(sim_map)
-            if use_key_mask:
+            if self.use_key_mask:
                 key_mask=self.sigmoid_key(key_mask)
                 sim_map=sim_map*key_mask
-            if use_query_mask:
+            if self.use_query_mask:
                 query_mask=self.sigmoid_query(query_mask)
                 sim_map=sim_map*query_mask
                 
