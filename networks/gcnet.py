@@ -149,7 +149,7 @@ class GCBModule(nn.Module):
         elif type == 'baseline':
             self.ctb = None
         elif type == 'mask_nl':
-            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'sigmoid', use_key_mask=True, use_query_mask=False)
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'sigmoid', use_key_mask=True, use_query_mask=True)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
 
