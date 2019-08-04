@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn import init
 import math
 
-class NonLocal2d(nn.Module):
+class MaskNonLocal2d(nn.Module):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, 
                  lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False):
@@ -18,7 +18,7 @@ class NonLocal2d(nn.Module):
         bn_nd = nn.BatchNorm2d
 
 
-        super(NonLocal2d, self).__init__()
+        super(MaskNonLocal2d, self).__init__()
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
         if use_query_mask==True:
