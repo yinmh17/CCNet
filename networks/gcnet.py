@@ -14,7 +14,7 @@ import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
 from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
-from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock
+from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -117,9 +117,9 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='glore'):
+    def __init__(self, in_channels, out_channels, num_classes, type='mask_nl'):
         super(GCBModule, self).__init__()
-        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
+        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -148,6 +148,8 @@ class GCBModule(nn.Module):
             self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=True)
         elif type == 'baseline':
             self.ctb = None
+        elif type == 'mask_nl':
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=True, use_query_mask=False)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
 
