@@ -40,7 +40,7 @@ class _NonLocalNd(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
