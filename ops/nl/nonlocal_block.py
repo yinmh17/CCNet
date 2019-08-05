@@ -40,7 +40,7 @@ class _NonLocalNd(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
-        self.softmax = nn.Softmax(dim=2)
+        self.softmax = nn.Softmax(dim=1)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
@@ -113,7 +113,7 @@ class _NonLocalNd(nn.Module):
 
 class NonLocal2d(_NonLocalNd):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False):
+    def __init__(self, inplanes, planes, downsample=False, use_gn=False, lr_mult=None, use_out=False):
         super(NonLocal2d, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
 
 
