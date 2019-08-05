@@ -117,7 +117,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='nl_cos'):
+    def __init__(self, in_channels, out_channels, num_classes, type='mask_nl'):
         super(GCBModule, self).__init__()
         assert type in ['baseline','gcb', 'nl', 'nl_bn', 'nl_cos', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
@@ -149,7 +149,7 @@ class GCBModule(nn.Module):
         elif type == 'baseline':
             self.ctb = None
         elif type == 'mask_nl':
-            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'sigmoid', use_key_mask=True, use_query_mask=True)
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'sigmoid', use_key_mask=False, use_query_mask=True)
         elif type == 'nl_cos':
             self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
