@@ -90,12 +90,12 @@ class _NonLocalNdCos(nn.Module):
         value = value.view(value.size(0), value.size(1), -1)
         
         # [N, C', 1]
-        mean_query = query.mean(2)
-        mean_key = key.mean(2)
+        mean_query = query.mean(2).unsqueeze(2)
+        mean_key = key.mean(2).unsqueeze(2)
         # [N, 1, H x W]
-        var_query = (query*query).sum(1).sqrt()
+        var_query = (query*query).sum(1).sqrt().unsqueeze(1)
         # [N, 1, H'x W']
-        var_key = (key*key).sum(1).sqrt()
+        var_key = (key*key).sum(1).sqrt().unsqueeze(1)
         
         # [N, C', H x W]
         query = (query-mean_query)/(var_query+1e-6)
