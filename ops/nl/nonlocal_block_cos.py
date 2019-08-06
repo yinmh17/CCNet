@@ -105,7 +105,7 @@ class _NonLocalNdCos(nn.Module):
         # [N, H x W, H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
         #sim_map = sim_map/self.scale
-        #sim_map = self.softmax(sim_map)
+        sim_map = self.softmax(sim_map)
 
         # [N, H x W, C']
         out = torch.bmm(sim_map, value.transpose(1, 2))
