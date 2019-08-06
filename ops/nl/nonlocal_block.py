@@ -113,7 +113,7 @@ class _NonLocalNd(nn.Module):
 
 class NonLocal2d(_NonLocalNd):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False):
+    def __init__(self, inplanes, planes, downsample=False, use_gn=False, lr_mult=None, use_out=False):
         super(NonLocal2d, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
 
 
