@@ -90,21 +90,23 @@ class _NonLocalNdCos(nn.Module):
         value = value.view(value.size(0), value.size(1), -1)
         
         # [N, C', 1]
-        mean_query = query.mean(2).unsqueeze(2)
-        mean_key = key.mean(2).unsqueeze(2)
+        mean_query = query.mean(1).unsqueeze(1)
+        mean_key = key.mean(1).unsqueeze(1)
         # [N, 1, H x W]
         var_query = (query*query).sum(1).sqrt().unsqueeze(1)
         # [N, 1, H'x W']
         var_key = (key*key).sum(1).sqrt().unsqueeze(1)
         
         # [N, C', H x W]
-        query = (query-mean_query)/(var_query+1e-6)
+        #query = (query-mean_query)/(var_query+1e-6)
+        query = (query-mean_query)
         # [N, C', H'x W']
-        key = (key-mean_key)/(var_key+1e-6)
+        #key = (key-mean_key)/(var_key+1e-6)
+        key = (key-mean_key)
         
         # [N, H x W, H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
-        #sim_map = sim_map/self.scale
+        sim_map = sim_map/self.scale
         sim_map = self.softmax(sim_map)
 
         # [N, H x W, C']
