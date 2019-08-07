@@ -98,11 +98,11 @@ class _NonLocalNdCos(nn.Module):
         var_key = (key*key).sum(1).sqrt().unsqueeze(1)
         
         # [N, C', H x W]
-        #query = (query-mean_query)/(var_query+1e-6)
-        query = (query-mean_query)
+        query = (query-mean_query)/(var_query+1e-6)
+        #query = (query-mean_query)
         # [N, C', H'x W']
-        #key = (key-mean_key)/(var_key+1e-6)
-        key = (key-mean_key)
+        key = (key-mean_key)/(var_key+1e-6)
+        #key = (key-mean_key)
         
         # [N, H x W, H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
