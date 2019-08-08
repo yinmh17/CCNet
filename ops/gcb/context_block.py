@@ -16,7 +16,7 @@ class ContextBlock(nn.Module):
                  inplanes,
                  ratio,
                  pooling_type='att',
-                 fusion_types=('channel_mul', ),
+                 fusion_types=('channel_add', ),
                  one_fc=False):
         super(ContextBlock, self).__init__()
         assert pooling_type in ['avg', 'att']
@@ -49,7 +49,7 @@ class ContextBlock(nn.Module):
             self.channel_add_conv = None
         if 'channel_mul' in fusion_types:
             if one_fc:
-                self.channel_add_conv=nn.Sequential(
+                self.channel_mul_conv=nn.Sequential(
                     nn.Conv2d(self.inplanes, self.inplanes, kernel_size=1),
                     nn.LayerNorm([self.inplanes, 1, 1]))
             else:
