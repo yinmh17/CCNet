@@ -8,9 +8,10 @@ import math
 class MaskNonLocal2d(nn.Module):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, 
-                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False):
+                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False, mask_pos='before'):
 
         assert mask_type in ['softmax', 'sigmoid']
+        assert mask_pos in ['before', 'after']
         conv_nd = nn.Conv2d
         if downsample:
             max_pool = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
@@ -46,6 +47,7 @@ class MaskNonLocal2d(nn.Module):
         self.use_key_mask=use_key_mask
         self.use_query_mask=use_query_mask
         self.mask_type=mask_type
+        self.mask_pos=mask_pos
 
     def reset_parameters(self):
 
@@ -97,25 +99,34 @@ class MaskNonLocal2d(nn.Module):
         key = key.view(key.size(0), key.size(1), -1)
         value = value.view(value.size(0), value.size(1), -1)
         
-        # [N, H x W, H' x W']
-        sim_map = torch.bmm(query.transpose(1, 2), key)
-        sim_map = sim_map/self.scale
+        if self.mask_pos == 'before':
+            if self.use_key_mask:
+                key += key_mask
+            if self.use_query_mask:
+                query += query_mask
+            # [N, H x W, H' x W']
+            sim_map = torch.bmm(query.transpose(1, 2), key)
+            sim_map = sim_map/self.scale
+            sim_map = self.softmax(sim_map)
         
-        if self.mask_type=='softmax':
-            if self.use_key_mask:
-                sim_map += key_mask
-            if self.use_query_mask:
-                sim_map += query_mask
-            sim_map = self.softmax(sim_map)
-            
-        if self.mask_type == 'sigmoid':
-            sim_map = self.softmax(sim_map)
-            if self.use_key_mask:
-                key_mask=self.sigmoid_key(key_mask)
-                sim_map=sim_map*key_mask
-            if self.use_query_mask:
-                query_mask=self.sigmoid_query(query_mask)
-                sim_map=sim_map*query_mask
+        if self.mask_pos =='after':
+            sim_map = torch.bmm(query.transpose(1, 2), key)
+            sim_map = sim_map/self.scale
+            if self.mask_type=='softmax':
+                if self.use_key_mask:
+                    sim_map += key_mask
+                if self.use_query_mask:
+                    sim_map += query_mask
+                sim_map = self.softmax(sim_map)
+
+            if self.mask_type == 'sigmoid':
+                sim_map = self.softmax(sim_map)
+                if self.use_key_mask:
+                    key_mask=self.sigmoid_key(key_mask)
+                    sim_map=sim_map*key_mask
+                if self.use_query_mask:
+                    query_mask=self.sigmoid_query(query_mask)
+                    sim_map=sim_map*query_mask
                 
         # [N, T x H x W, C']
         out = torch.bmm(sim_map, value.transpose(1, 2))
