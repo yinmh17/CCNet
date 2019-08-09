@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type=['channel']):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
@@ -126,8 +126,8 @@ class _NonLocalNd_bn(nn.Module):
 
 class NonLocal2d_bn(_NonLocalNd_bn):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel']):
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
