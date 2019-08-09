@@ -149,7 +149,7 @@ class GCBModule(nn.Module):
         elif type == 'baseline':
             self.ctb = None
         elif type == 'mask_nl':
-            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=True, use_query_mask=False, mask_pos='after')
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=False, use_query_mask=True, mask_pos='before')
         elif type == 'nl_cos':
             self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
