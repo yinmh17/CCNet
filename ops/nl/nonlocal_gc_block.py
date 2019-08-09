@@ -106,7 +106,7 @@ class _NonLocalNdGc(nn.Module):
         # [N, C', T x H x W]
         out_sim = out_sim.transpose(1, 2)
         # [N, C', T,  H, W]
-        out_sim = out_sim.view(out.size(0), out.size(1), *x.size()[2:])
+        out_sim = out_sim.view(out_sim.size(0), out_sim.size(1), *x.size()[2:])
         # [N, C, T,  H, W]
         if self.conv_out is not None:
             out_sim = self.conv_out(out_sim)
