@@ -1,4 +1,4 @@
-from .nl import NonLocal2d,NonLocal2d_bn,NonLocal2dCos
+from .nl import NonLocal2d,NonLocal2d_bn,NonLocal2dCos, NonLocal2dGc
 from .gcb import ContextBlock
 from .multihead import MultiheadBlock,MultiheadSpatialBlock,MultiRelationBlock,MultiheadRelationBlock
 from .glore import GloreUnit
@@ -7,5 +7,5 @@ from .mask_nl import MaskNonLocal2d
 
 __all__ = [
     'NonLocal2d', 'NonLocal2d_bn', 'NonLocal2dCos', 'ContextBlock', 'MultiheadBlock', 'MultiheadSpatialBlock', 'MultiRelationBlock', 
-    'MultiheadRelationBlock', 'GloreUnit', 'ProjMultiheadBlock', 'ProjSpatialBlock', 'MaskNonlocal2d', 
+    'MultiheadRelationBlock', 'GloreUnit', 'ProjMultiheadBlock', 'ProjSpatialBlock', 'MaskNonlocal2d', 'NonLocal2dGc'
 ]
