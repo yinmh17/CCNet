@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn import init
 import math
 
-class _NonLocalNd(nn.Module):
+class _NonLocalNdGc(nn.Module):
 
     def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
@@ -31,7 +31,7 @@ class _NonLocalNd(nn.Module):
                 max_pool = None
             bn_nd = nn.BatchNorm1d
 
-        super(_NonLocalNd, self).__init__()
+        super(_NonLocalNdGc, self).__init__()
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
@@ -121,13 +121,13 @@ class _NonLocalNd(nn.Module):
         return out
 
 
-class NonLocal2d(_NonLocalNd):
+class NonLocal2dGc(_NonLocalNdGc):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, lr_mult=None, use_out=False):
-        super(NonLocal2d, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+        super(NonLocal2dGc, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
 
 
-class NonLocal3d(_NonLocalNd):
+class NonLocal3dGc(_NonLocalNdGc):
 
     def __init__(self, inplanes, planes, downsample, use_gn, lr_mult, use_out):
-        super(NonLocal3d, self).__init__(dim=3, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+        super(NonLocal3dGc, self).__init__(dim=3, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
