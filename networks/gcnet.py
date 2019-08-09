@@ -153,7 +153,7 @@ class GCBModule(nn.Module):
         elif type == 'nl_cos':
             self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
         elif type == 'nl_gc':
-            self.ctb = NonLocal2dGc(inter_channels, inter_channels // 2, downsample=False)
+            self.ctb = NonLocal2dGc(inter_channels, inter_channels // 2, downsample=True)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
 
