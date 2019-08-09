@@ -7,8 +7,9 @@ import math
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type=['channel']):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
+        #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
             conv_nd = nn.Conv3d
             if downsample:
@@ -34,8 +35,6 @@ class _NonLocalNd_bn(nn.Module):
         super(_NonLocalNd_bn, self).__init__()
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
-        self.bn_query=bn_nd(planes,affine=False)
-        self.bn_key=bn_nd(planes,affine=False)
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
             self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
@@ -47,6 +46,7 @@ class _NonLocalNd_bn(nn.Module):
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(planes)
+        self.whiten_type = whiten_type
 
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
@@ -80,16 +80,27 @@ class _NonLocalNd_bn(nn.Module):
             input_x = x
 
         # [N, C', T, H, W]
-        query = self.bn_query(self.conv_query(x))
+        query = self.conv_query(x)
         # [N, C', T, H', W']
-        key = self.bn_key(self.conv_key(input_x))
+        key = self.conv_key(input_x)
         value = self.conv_value(input_x)
 
-        # [N, C', T x H x W]
+        # [N, C', H x W]
         query = query.view(query.size(0), query.size(1), -1)
-        # [N, C', T x H' x W']
+        # [N, C', H' x W']
         key = key.view(key.size(0), key.size(1), -1)
         value = value.view(value.size(0), value.size(1), -1)
+        
+        if 'channel' in self.whiten_type :
+            key_mean = key.mean(2).unsqueeze(2)
+            query_mean = query.mean(2).unsqueeze(2)
+            key -= key_mean
+            query -= query_mean
+        if 'spatial' in self.whiten_type :
+            key_mean = key.mean(1).unsqueeze(1)
+            query_mean = query.mean(1).unsqueeze(1)
+            key -= key_mean
+            query -= query_mean
 
         # [N, T x H x W, T x H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
