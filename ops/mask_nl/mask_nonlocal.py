@@ -103,7 +103,7 @@ class MaskNonLocal2d(nn.Module):
             if self.use_key_mask:
                 key += key_mask
             if self.use_query_mask:
-                query += query_mask
+                query += query_mask.permute(0,2,1)
             # [N, H x W, H' x W']
             sim_map = torch.bmm(query.transpose(1, 2), key)
             sim_map = sim_map/self.scale
