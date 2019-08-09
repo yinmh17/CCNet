@@ -98,8 +98,8 @@ class _NonLocalNdGc(nn.Module):
         sim_map = torch.bmm(query.transpose(1, 2), key)
         sim_map = sim_map/self.scale
         sim_map = self.softmax(sim_map)
-        # [N, 1, H'x W', 1]
-        mask = self.softmax(mask).unsqueeze(-1)
+        # [N, 1, H'x W']
+        mask = self.softmax(mask)
 
         # [N, T x H x W, C']
         out_sim = torch.bmm(sim_map, value.transpose(1, 2))
@@ -115,7 +115,7 @@ class _NonLocalNdGc(nn.Module):
         out_sim = self.gamma * out_sim
         
         # [N, C', 1, 1]
-        out_gc = torch.bmm(value.unsqueeze(-2), mask)
+        out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
         
         out = residual + out_sim + out_gc
         return out
