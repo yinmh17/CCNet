@@ -14,7 +14,7 @@ import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
 from ops import NonLocal2d, NonLocal2d_bn, NonLocal2dCos, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
-from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d
+from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d, NonLocal2dGc
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -117,9 +117,9 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='mask_nl'):
+    def __init__(self, in_channels, out_channels, num_classes, type='nl_gc'):
         super(GCBModule, self).__init__()
-        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'nl_cos', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
+        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'nl_gc', 'nl_cos', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -152,6 +152,8 @@ class GCBModule(nn.Module):
             self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=False, use_query_mask=True, mask_pos='before')
         elif type == 'nl_cos':
             self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
+        elif type == 'nl_gc':
+            self.ctb = NonLocal2dGc(inter_channels, inter_channels // 2, downsample=False)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
 
