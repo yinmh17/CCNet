@@ -128,7 +128,7 @@ class GCBModule(nn.Module):
         elif type == 'nl':
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
         elif type == 'nl_bn':
-            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=False, whiten_type=['channel'], temperature=0.2)
+            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=True, whiten_type=['channel'], temperature=0.2)
         elif type == 'multi':
             self.ctb = MultiheadBlock(inter_channels, ratio=1./4, one_fc=True, 
                                       head_num=8, pre_group=1, post_group=8)
