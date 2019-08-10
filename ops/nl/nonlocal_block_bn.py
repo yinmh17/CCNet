@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type, temperature):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
@@ -47,6 +47,7 @@ class _NonLocalNd_bn(nn.Module):
         self.gamma = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(planes)
         self.whiten_type = whiten_type
+        self.temperature = temperature
 
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
@@ -105,6 +106,7 @@ class _NonLocalNd_bn(nn.Module):
         # [N, T x H x W, T x H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
         sim_map = sim_map/self.scale
+        sim_map = sim_map/self.temperature
         sim_map = self.softmax(sim_map)
 
         # [N, T x H x W, C']
@@ -126,8 +128,8 @@ class _NonLocalNd_bn(nn.Module):
 
 class NonLocal2d_bn(_NonLocalNd_bn):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel']):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type)
+    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel'], temperature=1.0):
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type, temperature=temperature)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
