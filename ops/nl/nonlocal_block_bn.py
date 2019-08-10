@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type, temperature):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type, temperature, with_gc):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
@@ -41,6 +41,8 @@ class _NonLocalNd_bn(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
+        if with_gc:
+            self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
@@ -48,6 +50,7 @@ class _NonLocalNd_bn(nn.Module):
         self.scale = math.sqrt(planes)
         self.whiten_type = whiten_type
         self.temperature = temperature
+        self.with_gc = with_gc
 
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
@@ -110,26 +113,37 @@ class _NonLocalNd_bn(nn.Module):
         sim_map = self.softmax(sim_map)
 
         # [N, T x H x W, C']
-        out = torch.bmm(sim_map, value.transpose(1, 2))
+        out_sim = torch.bmm(sim_map, value.transpose(1, 2))
         # [N, C', T x H x W]
-        out = out.transpose(1, 2)
+        out_sim = out_sim.transpose(1, 2)
         # [N, C', T,  H, W]
-        out = out.view(out.size(0), out.size(1), *x.size()[2:])
+        out_sim = out.view(out_sim.size(0), out_sim.size(1), *x.size()[2:])
         # [N, C, T,  H, W]
         if self.conv_out is not None:
-            out = self.conv_out(out)
+            out_sim = self.conv_out(out_sim)
         # if self.norm is not None:
         #     out = self.norm(out)
-        out = self.gamma * out
+        out_sim = self.gamma * out_sim
+        
+        out = residual + out_sim
+        
+        if self.with_gc:
+            # [N, 1, H', W']
+            mask = self.conv_mask(input_x)
+            # [N, 1, H'x W']
+            mask = mask.view(mask.size(0), mask.size(1), -1)
+            mask = self.softmax(mask)
+            # [N, C', 1, 1]
+            out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
+            out = out+out_gc
 
-        out = residual + out
         return out
 
 
 class NonLocal2d_bn(_NonLocalNd_bn):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel'], temperature=1.0):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type, temperature=temperature)
+    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel'], temperature=1.0, with_gc=False):
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
