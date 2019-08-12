@@ -38,14 +38,14 @@ class _NonLocalNdGc(nn.Module):
         self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
         if add_conv == 'one_fc':
             self.channel_add_conv=nn.Sequential(
-                nn.Conv2d(self.inplanes, self.inplanes, kernel_size=1),
-                nn.LayerNorm([self.inplanes, 1, 1]))
+                nn.Conv2d(inplanes, inplanes, kernel_size=1),
+                nn.LayerNorm([inplanes, 1, 1]))
         elif add_conv == 'two_fc':
             self.channel_add_conv = nn.Sequential(
-                nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
-                nn.LayerNorm([self.planes, 1, 1]),
+                nn.Conv2d(inplanes, inplanes//4, kernel_size=1),
+                nn.LayerNorm([inplanes//4, 1, 1]),
                 nn.ReLU(inplace=True),  # yapf: disable
-                nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
+                nn.Conv2d(inplanes//4, inplanes, kernel_size=1))
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
             self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
