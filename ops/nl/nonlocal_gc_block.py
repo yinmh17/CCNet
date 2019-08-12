@@ -7,8 +7,9 @@ import math
 
 class _NonLocalNdGc(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, add_conv):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
+        assert add_conv in [None, 'one_fc', 'two_fc']
         if dim == 3:
             conv_nd = nn.Conv3d
             if downsample:
@@ -35,6 +36,16 @@ class _NonLocalNdGc(nn.Module):
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
+        if add_conv == 'one_fc':
+            self.channel_add_conv=nn.Sequential(
+                nn.Conv2d(self.inplanes, self.inplanes, kernel_size=1),
+                nn.LayerNorm([self.inplanes, 1, 1]))
+        elif add_conv == 'two_fc':
+            self.channel_add_conv = nn.Sequential(
+                nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
+                nn.LayerNorm([self.planes, 1, 1]),
+                nn.ReLU(inplace=True),  # yapf: disable
+                nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
             self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
@@ -46,9 +57,11 @@ class _NonLocalNdGc(nn.Module):
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(planes)
+        self.add_conv = add_conv
 
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
+        
 
     def reset_parameters(self):
 
@@ -117,14 +130,17 @@ class _NonLocalNdGc(nn.Module):
         # [N, C', 1, 1]
         out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
         
+        if self.add_conv is not None:
+            out_gc = self.channel_add_conv(out_gc)
+        
         out = residual + out_sim + out_gc
         return out
 
 
 class NonLocal2dGc(_NonLocalNdGc):
 
-    def __init__(self, inplanes, planes, downsample=False, use_gn=False, lr_mult=None, use_out=False):
-        super(NonLocal2dGc, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out)
+    def __init__(self, inplanes, planes, downsample=False, use_gn=False, lr_mult=None, use_out=False, add_conv=None):
+        super(NonLocal2dGc, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, add_conv=add_conv)
 
 
 class NonLocal3dGc(_NonLocalNdGc):
