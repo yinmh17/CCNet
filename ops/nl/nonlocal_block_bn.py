@@ -44,11 +44,11 @@ class _NonLocalNd_bn(nn.Module):
         if with_gc:
             self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
         if 'bn_affine' in whiten_type:
-            self.key_bn_affine=nn.BatchNorm2d(planes)
-            self.query_bn_affine=nn.BatchNorm2d(planes)
+            self.key_bn_affine = nn.BatchNorm1d(planes)
+            self.query_bn_affine = nn.BatchNorm1d(planes)
         if 'bn' in whiten_type:
-            self.key_bn=nn.BatchNorm2d(planes, affine=False)
-            self.query_bn=nn.BatchNorm2d(planes, affine=False)
+            self.key_bn = nn.BatchNorm1d(planes, affine=False)
+            self.query_bn = nn.BatchNorm1d(planes, affine=False)
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
