@@ -128,7 +128,7 @@ class GCBModule(nn.Module):
         elif type == 'nl':
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
         elif type == 'nl_bn':
-            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=False, whiten_type=['channel'], temperature=0.1, with_gc=True)
+            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=True, whiten_type=['bn'], temperature=0.1, with_gc=False)
         elif type == 'multi':
             self.ctb = MultiheadBlock(inter_channels, ratio=1./4, one_fc=True, 
                                       head_num=8, pre_group=1, post_group=8)
@@ -240,5 +240,5 @@ class ResNet(nn.Module):
 
 
 def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 6, 3], num_classes, with_att=False, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
+    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
     return model
