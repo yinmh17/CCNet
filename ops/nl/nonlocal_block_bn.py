@@ -43,6 +43,12 @@ class _NonLocalNd_bn(nn.Module):
             self.conv_out = None
         if with_gc:
             self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
+        if 'bn_affine' in whiten_type:
+            self.key_bn_affine=nn.BatchNorm2d(planes)
+            self.query_bn_affine=nn.BatchNorm2d(planes)
+        if 'bn' in whiten_type:
+            self.key_bn=nn.BatchNorm2d(planes, affine=False)
+            self.query_bn=nn.BatchNorm2d(planes, affine=False)
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
@@ -51,7 +57,7 @@ class _NonLocalNd_bn(nn.Module):
         self.whiten_type = whiten_type
         self.temperature = temperature
         self.with_gc = with_gc
-
+        
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
 
@@ -105,6 +111,12 @@ class _NonLocalNd_bn(nn.Module):
             query_mean = query.mean(1).unsqueeze(1)
             key -= key_mean
             query -= query_mean
+        if 'bn_affine' in self.whiten_type :
+            key = self.key_bn_affine(key)
+            query = self.query_bn_affine(query)
+        if 'bn' in self.whiten_type:
+            key = self.key_bn(key)
+            query = self.query_bn(query)
 
         # [N, T x H x W, T x H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
