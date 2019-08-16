@@ -8,7 +8,7 @@ import math
 class MaskNonLocal2d(nn.Module):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, 
-                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False, mask_pos='before', temperature=None):
+                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False, mask_pos='before', whiten_type=[None], temperature=None):
 
         assert mask_type in ['softmax', 'sigmoid']
         assert mask_pos in ['before', 'after']
@@ -49,6 +49,7 @@ class MaskNonLocal2d(nn.Module):
         self.mask_type=mask_type
         self.mask_pos=mask_pos
         self.temperature=temperature
+        self.whiten_type=whiten_type
 
     def reset_parameters(self):
 
@@ -99,6 +100,12 @@ class MaskNonLocal2d(nn.Module):
         # [N, C', H' x W']
         key = key.view(key.size(0), key.size(1), -1)
         value = value.view(value.size(0), value.size(1), -1)
+        
+        if 'channel' in self.whiten_type :
+            key_mean = key.mean(2).unsqueeze(2)
+            query_mean = query.mean(2).unsqueeze(2)
+            key -= key_mean
+            query -= query_mean
         
         if self.mask_pos == 'before':
             if self.use_key_mask:
