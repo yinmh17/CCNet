@@ -8,7 +8,8 @@ import math
 class MaskNonLocal2d(nn.Module):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, 
-                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, use_query_mask=False, mask_pos='before', whiten_type=[None], temperature=None):
+                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, 
+                 use_query_mask=False, mask_pos='before', whiten_type=[None], temperature=None, use_softmax=True):
 
         assert mask_type in ['softmax', 'sigmoid']
         assert mask_pos in ['before', 'after']
@@ -50,6 +51,7 @@ class MaskNonLocal2d(nn.Module):
         self.mask_pos=mask_pos
         self.temperature=temperature
         self.whiten_type=whiten_type
+        self.use_softmax=use_softmax
 
     def reset_parameters(self):
 
@@ -117,7 +119,8 @@ class MaskNonLocal2d(nn.Module):
             sim_map = sim_map/self.scale
             if self.temperature:
                 sim_map = sim_map/self.temperature
-            sim_map = self.softmax(sim_map)
+            if self.use_softmax:
+                sim_map = self.softmax(sim_map)
         
         if self.mask_pos =='after':
             sim_map = torch.bmm(query.transpose(1, 2), key)
@@ -129,10 +132,12 @@ class MaskNonLocal2d(nn.Module):
                     sim_map += key_mask
                 if self.use_query_mask:
                     sim_map += query_mask
-                sim_map = self.softmax(sim_map)
+                if self.use_softmax:
+                    sim_map = self.softmax(sim_map)
 
             if self.mask_type == 'sigmoid':
-                sim_map = self.softmax(sim_map)
+                if self.use_softmax:
+                    sim_map = self.softmax(sim_map)
                 if self.use_key_mask:
                     key_mask=self.sigmoid_key(key_mask)
                     sim_map=sim_map*key_mask
