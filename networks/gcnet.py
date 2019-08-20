@@ -149,7 +149,7 @@ class GCBModule(nn.Module):
         elif type == 'baseline':
             self.ctb = None
         elif type == 'mask_nl':
-            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=True, use_query_mask=False, mask_pos='after', whiten_type=['channel'], temperature=0.01)
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'sigmoid', use_key_mask=True, use_query_mask=False, mask_pos='after', whiten_type=[None], temperature=1.0, use_softmax=False)
         elif type == 'nl_cos':
             self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
         elif type == 'nl_gc':
