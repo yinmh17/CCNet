@@ -5,6 +5,7 @@ from torch import nn
 from torch.nn import init
 import math
 
+
 class _NonLocalNdGc(nn.Module):
 
     def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, add_conv):
