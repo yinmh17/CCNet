@@ -7,7 +7,7 @@ import math
 
 class SegNonLocal2d(nn.Module):
 
-    def __init__(self, inplanes, planes, downsample=False,  lr_mult=None, use_out=False, k_seg=True, q_seg=False):
+    def __init__(self, inplanes, planes, downsample=False,  lr_mult=None, use_out=False, k_seg=False, q_seg=True):
         conv_nd = nn.Conv2d
         if downsample:
             max_pool = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
