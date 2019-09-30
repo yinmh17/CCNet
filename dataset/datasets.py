@@ -7,7 +7,6 @@ import torch
 import torchvision
 import cv2
 from torch.utils import data
-from dataset.zipreader import ZipReader
 
 
 class VOCDataSet(data.Dataset):
@@ -137,8 +136,8 @@ class CSDataSet(data.Dataset):
         for item in self.img_ids:
             image_path, label_path = item
             name = osp.splitext(osp.basename(label_path))[0]
-            img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'),image_path)
-            label_file = osp.join(osp.join(self.root, 'gtFine_trainvaltest.zip@'),label_path)
+            img_file = osp.join(self.root, image_path)
+            label_file = osp.join(self.root, label_path)
             self.files.append({
                 "img": img_file,
                 "label": label_file,
@@ -173,8 +172,8 @@ class CSDataSet(data.Dataset):
 
     def __getitem__(self, index):
         datafiles = self.files[index]
-        image = ZipReader.imread(datafiles["img"],flag='color')
-        label = ZipReader.imread(datafiles["label"],flag='grayscale')
+        image = cv2.imread(datafiles["img"], cv2.IMREAD_COLOR)
+        label = cv2.imread(datafiles["label"], cv2.IMREAD_GRAYSCALE)
         label = self.id2trainId(label)
         size = image.shape
         name = datafiles["name"]
@@ -224,7 +223,7 @@ class CSDataTestSet(data.Dataset):
         for item in self.img_ids:
             image_path = item
             name = osp.splitext(osp.basename(image_path))[0]
-            img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'),image_path)
+            img_file = osp.join(self.root, image_path)
             self.files.append({
                 "img": img_file
             })
@@ -234,7 +233,7 @@ class CSDataTestSet(data.Dataset):
 
     def __getitem__(self, index):
         datafiles = self.files[index]
-        image = ZipReader.imread(datafiles["img"],flag='color')
+        image = cv2.imread(datafiles["img"], cv2.IMREAD_COLOR)
         size = image.shape
         name = osp.splitext(osp.basename(datafiles["img"]))[0]
         image = np.asarray(image, np.float32)
