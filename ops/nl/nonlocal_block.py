@@ -43,7 +43,8 @@ class _NonLocalNd(nn.Module):
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
-        self.gamma = nn.Parameter(torch.zeros(1))
+        # self.gamma = nn.Parameter(torch.zeros(1))
+        self.norm = InPlaceABNSync(num_features=inplanes, activation='identity')
         self.scale = math.sqrt(planes)
 
         self.reset_parameters()
@@ -57,9 +58,9 @@ class _NonLocalNd(nn.Module):
                 if m.bias is not None:
                     init.zeros_(m.bias)
                 m.inited = True
-        #init.constant_(self.norm.weight, 0)
-        #init.constant_(self.norm.bias, 0)
-        #self.norm.inited = True
+        nn.init.constant_(self.conv_out.weight, 0)
+        if hasattr(self.conv_out, 'bias') and self.conv_out.bias is not None:
+            nn.init.constant_(self.conv_out.bias, 0) 
 
     def reset_lr_mult(self, lr_mult):
         if lr_mult is not None:
@@ -73,6 +74,7 @@ class _NonLocalNd(nn.Module):
         residual = x
         # [N, C, T, H', W']
         if self.downsample is not None:
+            print('downsample')
             input_x = self.downsample(x)
         else:
             input_x = x
@@ -105,7 +107,7 @@ class _NonLocalNd(nn.Module):
             out = self.conv_out(out)
         # if self.norm is not None:
         #     out = self.norm(out)
-        out = self.gamma * out
+        out = self.norm(out)
 
         out = residual + out
         return out

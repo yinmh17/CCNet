@@ -126,7 +126,7 @@ class GCBModule(nn.Module):
         if type == 'gcb':
             self.ctb = ContextBlock(inter_channels, ratio=1./4, one_fc=True)
         elif type == 'nl':
-            self.ctb = NonLocal2d(inter_channels, inter_channels // 2)
+            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, use_out=True)
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=False, whiten_type=['bn'], temperature=0.015, with_gc=False)
         elif type == 'multi':
