@@ -130,14 +130,11 @@ class _NonLocalNd_bn(nn.Module):
         out_sim = out_sim.transpose(1, 2)
         # [N, C', T,  H, W]
         out_sim = out_sim.view(out_sim.size(0), out_sim.size(1), *x.size()[2:])
-        # [N, C, T,  H, W]
-        if self.conv_out is not None:
-            out_sim = self.conv_out(out_sim)
         # if self.norm is not None:
         #     out = self.norm(out)
         out_sim = self.gamma * out_sim
         
-        out = residual + out_sim
+        #out = residual + out_sim
         
         if self.with_gc:
             # [N, 1, H', W']
@@ -147,7 +144,13 @@ class _NonLocalNd_bn(nn.Module):
             mask = self.softmax(mask)
             # [N, C', 1, 1]
             out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
-            out = out+out_gc
+            out_sim = out_sim+out_gc
+            
+        # [N, C, T,  H, W]
+        if self.conv_out is not None:
+            out = self.conv_out(out_sim)
+            
+        out = out_sim + residual
 
         return out
 
