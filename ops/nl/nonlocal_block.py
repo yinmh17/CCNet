@@ -58,9 +58,10 @@ class _NonLocalNd(nn.Module):
                 if m.bias is not None:
                     init.zeros_(m.bias)
                 m.inited = True
-        nn.init.constant_(self.conv_out.weight, 0)
-        if hasattr(self.conv_out, 'bias') and self.conv_out.bias is not None:
-            nn.init.constant_(self.conv_out.bias, 0) 
+        if self.conv_out is not None:
+            nn.init.constant_(self.conv_out.weight, 0)
+            if hasattr(self.conv_out, 'bias') and self.conv_out.bias is not None:
+                nn.init.constant_(self.conv_out.bias, 0) 
 
     def reset_lr_mult(self, lr_mult):
         if lr_mult is not None:
@@ -107,7 +108,7 @@ class _NonLocalNd(nn.Module):
             out = self.conv_out(out)
         # if self.norm is not None:
         #     out = self.norm(out)
-        out = self.norm(out)
+        out = self.norm(out.contiguous())
 
         out = residual + out
         return out
