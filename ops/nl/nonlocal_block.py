@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, out_bn):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         if dim == 3:
             conv_nd = nn.Conv3d
@@ -40,6 +40,9 @@ class _NonLocalNd(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
+        if out_bn:
+            self.out_bn = nn.BatchNorm2d(inplanes)
+            
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
@@ -106,7 +109,8 @@ class _NonLocalNd(nn.Module):
         # if self.norm is not None:
         #     out = self.norm(out)
         out = self.gamma * out
-
+        if self.out_bn:
+            out = self.out_bn(out)
         out = residual + out
         return out
 
