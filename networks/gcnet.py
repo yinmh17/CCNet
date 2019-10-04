@@ -117,7 +117,7 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='nl_bn'):
+    def __init__(self, in_channels, out_channels, num_classes, type='nl'):
         super(GCBModule, self).__init__()
         assert type in ['baseline','gcb', 'nl', 'nl_bn', 'nl_gc', 'nl_cos', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
@@ -126,7 +126,7 @@ class GCBModule(nn.Module):
         if type == 'gcb':
             self.ctb = ContextBlock(inter_channels, ratio=1./4, one_fc=True)
         elif type == 'nl':
-            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=True, use_out=True)
+            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=True, use_out=True, out_bn=True)
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=False, whiten_type=['channel'], temperature=0.05, with_gc=True, use_out=True)
         elif type == 'multi':
