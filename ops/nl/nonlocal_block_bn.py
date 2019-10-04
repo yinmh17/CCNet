@@ -148,7 +148,7 @@ class _NonLocalNd_bn(nn.Module):
             
         # [N, C, T,  H, W]
         if self.conv_out is not None:
-            out = self.conv_out(out_sim)
+            out_sim = self.conv_out(out_sim)
             
         out = out_sim + residual
 
