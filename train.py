@@ -45,7 +45,7 @@ POWER = 0.9
 RANDOM_SEED = 1234
 RESTORE_FROM = './dataset/resnet101-imagenet.pth'
 SAVE_NUM_IMAGES = 2
-SAVE_PRED_EVERY = 10000
+SAVE_PRED_EVERY = 500
 SNAPSHOT_DIR = 'snapshots/'
 WEIGHT_DECAY = 0.0005
 
@@ -234,7 +234,7 @@ def main():
             torch.save(deeplab.state_dict(),osp.join(args.snapshot_dir, 'CS_scenes_'+str(args.num_steps)+'.pth'))
             break
 
-        if i_iter % args.save_pred_every == 0:
+        if i_iter % args.save_pred_every == 0 and i_iter > 50000:
             print('taking snapshot ...')
             torch.save(deeplab.state_dict(),osp.join(args.snapshot_dir, 'CS_scenes_'+str(i_iter)+'.pth'))     
 
