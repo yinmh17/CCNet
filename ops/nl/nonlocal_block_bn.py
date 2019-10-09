@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, whiten_type, temperature, with_gc):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, out_bn, whiten_type, temperature, with_gc):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
@@ -41,6 +41,10 @@ class _NonLocalNd_bn(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
+        if out_bn:
+            self.out_bn = nn.BatchNorm2d(inplanes)
+        else:
+            self.out_bn = None
         if with_gc:
             self.conv_mask = conv_nd(inplanes, 1, kernel_size=1)
         if 'bn_affine' in whiten_type:
@@ -149,6 +153,8 @@ class _NonLocalNd_bn(nn.Module):
         # [N, C, T,  H, W]
         if self.conv_out is not None:
             out_sim = self.conv_out(out_sim)
+        if self.out_bn:
+            out_sim = self.out_bn(out_sim)
             
         out = out_sim + residual
 
@@ -157,8 +163,8 @@ class _NonLocalNd_bn(nn.Module):
 
 class NonLocal2d_bn(_NonLocalNd_bn):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, whiten_type=['channel'], temperature=1.0, with_gc=False):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
+    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, out_bn=False, whiten_type=['channel'], temperature=1.0, with_gc=False):
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
