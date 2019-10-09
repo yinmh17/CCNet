@@ -42,6 +42,8 @@ class _NonLocalNd(nn.Module):
             self.conv_out = None
         if out_bn:
             self.out_bn = nn.BatchNorm2d(inplanes)
+        else:
+            self.out_bn = None
             
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
