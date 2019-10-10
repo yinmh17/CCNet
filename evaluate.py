@@ -55,6 +55,7 @@ def get_arguments():
                         help="Comma-separated string with height and width of images.")
     parser.add_argument("--whole", type=bool, default=False,
                         help="use whole input size.")
+    parser.add_argument('--config', help='train config file path')
     return parser.parse_args()
 
 def get_palette(num_cls):
@@ -184,7 +185,7 @@ def get_confusion_matrix(gt_label, pred_label, class_num):
 def main():
     """Create the model and start the evaluation process."""
     args = get_arguments()
-
+    cfg=fromfile(args.config)
     # gpu0 = args.gpu
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     h, w = map(int, args.input_size.split(','))
