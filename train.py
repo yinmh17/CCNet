@@ -140,16 +140,20 @@ def main():
     # Create network.
     deeplab = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
     print(deeplab)
-
-    saved_state_dict = torch.load(args.restore_from)
-    new_params = deeplab.state_dict().copy()
-    for i in saved_state_dict:
-        i_parts = i.split('.')
-        if not i_parts[0] == 'fc':
-            new_params['.'.join(i_parts[0:])] = saved_state_dict[i] 
     
-    deeplab.load_state_dict(new_params)
+    if cfg.train_cfg.start_iters == 0:
+        saved_state_dict = torch.load(cfg.train_cfg.restore_from)
+        new_params = deeplab.state_dict().copy()
+        for i in saved_state_dict:
+            i_parts = i.split('.')
+            if not i_parts[0] == 'fc':
+                new_params['.'.join(i_parts[0:])] = saved_state_dict[i] 
 
+        deeplab.load_state_dict(new_params)
+    else:
+        saved_state_dict = torch.load(cfg.train_cfg.restore_from)
+        deeplab.load_state_dict(saved_state_dict)
+        
     model = DataParallelModel(deeplab)
     model.train()
     model.float()
