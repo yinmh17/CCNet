@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
-from networks.gcnet import Res_Deeplab
+from networks.basenet import Res_Deeplab
 from dataset.datasets import CSDataSet
 from collections import OrderedDict
 import os
@@ -193,7 +193,7 @@ def main():
     else:
         input_size = (h, w)
 
-    model = Res_Deeplab(num_classes=args.num_classes)
+    model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
     
     saved_state_dict = torch.load(args.restore_from)
     model.load_state_dict(saved_state_dict)
