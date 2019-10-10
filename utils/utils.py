@@ -95,8 +95,8 @@ def inv_preprocess(imgs, num_images, img_mean):
     for i in range(num_images):
         outputs[i] = (np.transpose(imgs[i], (1,2,0)) + img_mean).astype(np.uint8)
     return outputs
-
-  class ConfigDict(Dict):
+  
+class ConfigDict(Dict):
 
     def __missing__(self, name):
         raise KeyError(name)
