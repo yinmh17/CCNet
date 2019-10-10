@@ -97,8 +97,8 @@ def get_arguments():
 args = get_arguments()
 cfg=fromfile(args.config)
 
-if cfg.model.type == 'gcnet':
-    from networks.gcnet import Res_Deeplab
+if cfg.model.type == 'basenet':
+    from networks.basenet import Res_Deeplab
 
 def lr_poly(base_lr, iter, max_iter, power):
     return base_lr*((1-float(iter)/max_iter)**(power))
