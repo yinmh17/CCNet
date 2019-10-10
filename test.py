@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
-from networks.gcnet import Res_Deeplab
+from networks.basenet import Res_Deeplab
 from dataset.datasets import CSDataTestSet
 from collections import OrderedDict
 import os
@@ -54,6 +54,7 @@ def get_arguments():
                         help="Comma-separated string with height and width of images.")
     parser.add_argument("--whole", type=bool, default=False,
                         help="use whole input size.")
+    parser.add_argument('--config', help='train config file path')
     return parser.parse_args()
 
 def get_palette(num_cls):
@@ -151,7 +152,7 @@ def id2trainId(label, id_to_trainid, reverse=False):
 def main():
     """Create the model and start the evaluation process."""
     args = get_arguments()
-
+    cfg=fromfile(args.config)
     # gpu0 = args.gpu
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     h, w = map(int, args.input_size.split(','))
@@ -161,7 +162,7 @@ def main():
         input_size = (h, w)
     ignore_label= args.ignore_label
 
-    model = Res_Deeplab(num_classes=args.num_classes)
+    model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
     
     saved_state_dict = torch.load(args.restore_from)
     model.load_state_dict(saved_state_dict)
