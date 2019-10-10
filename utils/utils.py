@@ -1,6 +1,10 @@
 from PIL import Image
 import numpy as np
 import torch
+import os.path as osp
+import sys
+from importlib import import_module
+from addict import Dict
 
 # colour map
 label_colours = [(0,0,0)
@@ -91,3 +95,34 @@ def inv_preprocess(imgs, num_images, img_mean):
     for i in range(num_images):
         outputs[i] = (np.transpose(imgs[i], (1,2,0)) + img_mean).astype(np.uint8)
     return outputs
+
+  class ConfigDict(Dict):
+
+    def __missing__(self, name):
+        raise KeyError(name)
+
+    def __getattr__(self, name):
+        try:
+            value = super(ConfigDict, self).__getattr__(name)
+        except KeyError:
+            ex = AttributeError("'{}' object has no attribute '{}'".format(
+                self.__class__.__name__, name))
+        except Exception as e:
+            ex = e
+        else:
+            return value
+        raise ex
+
+def fromfile(filename):
+    filename = osp.abspath(osp.expanduser(filename))
+    module_name = osp.basename(filename)[:-3]
+    config_dir = osp.dirname(filename)
+    sys.path.insert(0, config_dir)
+    mod = import_module(module_name)
+    cfg_dict = {
+        name: value
+        for name, value in mod.__dict__.items()
+        if not name.startswith('__')
+    }
+    sys.path.pop(0)
+    return ConfigDict(cfg_dict)
