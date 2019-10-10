@@ -13,8 +13,8 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, NonLocal2d_bn, NonLocal2dCos, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
-from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d, NonLocal2dGc
+from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
+from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -117,19 +117,21 @@ class Bottleneck(nn.Module):
         return out
 
 class GCBModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes, type='nl'):
+    def __init__(self, in_channels, out_channels, num_classes, cfg):
         super(GCBModule, self).__init__()
-        assert type in ['baseline','gcb', 'nl', 'nl_bn', 'nl_gc', 'nl_cos', 'mask_nl', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
+        type = cfg.type
+        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
         if type == 'gcb':
-            self.ctb = ContextBlock(inter_channels, ratio=1./4, one_fc=True)
+            self.ctb = ContextBlock(inter_channels, ratio=1./4)
         elif type == 'nl':
-            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=False, use_out=False, out_bn=True)
+            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type,
+                                  temperature=cfg.temp, use_out=cfg.use_out, out_bn=cfg.out_bn)
         elif type == 'nl_bn':
-            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=True, whiten_type=['channel'], 
-                                     temperature=0.1, with_gc=False, use_out=False, out_bn=False)
+            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type,
+                                     temperature=cfg.temp, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn)
         elif type == 'multi':
             self.ctb = MultiheadBlock(inter_channels, ratio=1./4, one_fc=True, 
                                       head_num=8, pre_group=1, post_group=8)
@@ -142,19 +144,13 @@ class GCBModule(nn.Module):
         elif type == 'multi_spatial':
             self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         elif type == 'glore':
-            self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'graph')
+            self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'node')
         elif type == 'proj_multi':
             self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
         elif type == 'proj_spatial':
             self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=True)
-        elif type == 'baseline':
+        else:
             self.ctb = None
-        elif type == 'mask_nl':
-            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, mask_type = 'softmax', use_key_mask=True, use_query_mask=False, mask_pos='after', whiten_type=[], temperature=1.0, use_softmax=False)
-        elif type == 'nl_cos':
-            self.ctb = NonLocal2dCos(inter_channels, inter_channels // 2)
-        elif type == 'nl_gc':
-            self.ctb = NonLocal2dGc(inter_channels, inter_channels // 2, downsample=False, add_conv=None)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
 
@@ -177,7 +173,7 @@ class GCBModule(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes, with_att, att, att_stage, att_pos, att_location):
+    def __init__(self, block, layers, num_classes, cfg):
         self.inplanes = 128
         super(ResNet, self).__init__()
         self.conv1 = conv3x3(3, 64, stride=2)
@@ -191,6 +187,12 @@ class ResNet(nn.Module):
         self.relu3 = nn.ReLU(inplace=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
+        with_att = cfg.att.with_att
+        att = cfg.att.type
+        att_stage = cfg.att.att_stage
+        att_pos = cfg.att.att_pos
+        att_location = cfg.att.att_location
+
         self.relu = nn.ReLU(inplace=False)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True) # change
         self.layer1 = self._make_layer(block, 64, layers[0], with_att=with_att*att_stage[0], att=att, att_pos=att_pos, att_loc=att_location[0])
@@ -198,7 +200,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2, with_att=with_att*att_stage[2], att=att, att_pos=att_pos, att_loc=att_location[2])
         self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4, multi_grid=(1,1,1), with_att=with_att*att_stage[3], att=att, att_pos=att_pos, att_loc=att_location[3])
         #self.layer5 = PSPModule(2048, 512)
-        self.head = GCBModule(2048, 512, num_classes)
+        self.head = GCBModule(2048, 512, num_classes, cfg.module)
 
         self.dsn = nn.Sequential(
             nn.Conv2d(1024, 512, kernel_size=3, stride=1, padding=1),
@@ -240,6 +242,6 @@ class ResNet(nn.Module):
         return [x, x_dsn]
 
 
-def Res_Deeplab(num_classes=21):
-    model = ResNet(Bottleneck,[3, 4, 23, 3], num_classes, with_att=False, att='glore', att_stage=[False, True, True, False], att_pos='after_add', att_location=[[],[0,2],[5,11,17],[]])
+def Res_Deeplab(cfg,num_classes):
+    model = ResNet(Bottleneck,cfg.backbone.block_num, num_classes, cfg)
     return model
