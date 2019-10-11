@@ -248,7 +248,7 @@ def main():
 
         # getConfusionMatrixPlot(confusion_matrix)
         print({'meanIU':mean_IU, 'IU_array':IU_array})
-        with open('result.txt', 'w') as f:
+        with open('result.txt', 'a') as f:
             f.write(json.dumps({'meanIU':mean_IU, 'IU_array':IU_array.tolist()}))
 
 if __name__ == '__main__':
