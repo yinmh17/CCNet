@@ -18,8 +18,6 @@ model = dict(
     module=dict(
         type='nl',
         downsample=False,
-        whiten_type=[],
-        temp=1.0,
         use_out=True,
         out_bn=True,
     )
