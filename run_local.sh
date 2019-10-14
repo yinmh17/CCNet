@@ -8,7 +8,7 @@ CONFIG=$3
 R=1
 STEPS=60000
 GPU_IDS=0,1,2,3
-START=50000
+START=0
 OHEM=1 #set to 1 for reducing the performance gap between val and test set.
 
 #variable ${LOCAL_OUTPUT} dir can save data of you job, after exec it will be upload to hadoop_out path 
