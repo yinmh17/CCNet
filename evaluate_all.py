@@ -195,7 +195,7 @@ def main():
         input_size = (h, w)
 
     model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
-    for i in range(50500,60001,500):
+    for i in range(59500,60001,100):
         restore_from = 'snapshots/CS_scenes_%s.pth'%i
         saved_state_dict = torch.load(restore_from)
         model.load_state_dict(saved_state_dict)
