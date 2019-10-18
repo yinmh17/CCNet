@@ -150,6 +150,7 @@ def main():
                 new_params['.'.join(i_parts[0:])] = saved_state_dict[i] 
 
         deeplab.load_state_dict(new_params)
+        print('new params loaded')
     else:
         saved_state_dict = torch.load(cfg.train_cfg.restore_from)
         deeplab.load_state_dict(saved_state_dict)
