@@ -32,8 +32,8 @@ train_cfg = dict(
     restore_from='./dataset/resnet101-imagenet.pth',
     save_num_images=2,
     start_iters=0,
-    save_from=50000,
-    save_pred_every=500,
+    save_from=59000,
+    save_pred_every=100,
     snapshot_dir='snapshots/',
     weight_decay=0.0005
 )
