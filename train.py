@@ -221,7 +221,7 @@ def main():
             torch.save(deeplab.state_dict(),osp.join(cfg.train_cfg.snapshot_dir, 'CS_scenes_'+str(cfg.train_cfg.num_steps)+'.pth'))
             break
 
-        if i_iter % cfg.train_cfg.save_pred_every == 0 and i_iter > cfg.train_cfg.save_from:
+        if i_iter % cfg.train_cfg.save_pred_every == 0 and i_iter >= cfg.train_cfg.save_from-1:
             print('taking snapshot ...')
             torch.save(deeplab.state_dict(),osp.join(cfg.train_cfg.snapshot_dir, 'CS_scenes_'+str(i_iter)+'.pth'))
 
