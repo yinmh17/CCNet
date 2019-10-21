@@ -23,7 +23,7 @@ model = dict(
     )
 )
 train_cfg = dict(
-    batch_size=4,
+    batch_size=8,
     learning_rate=1e-2,
     momentum=0.9,
     num_steps=60000,
