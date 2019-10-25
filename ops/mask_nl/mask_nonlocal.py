@@ -8,8 +8,8 @@ import math
 class MaskNonLocal2d(nn.Module):
 
     def __init__(self, inplanes, planes, downsample=False, use_gn=False, 
-                 lr_mult=None, use_out=False, mask_type='softmax', use_key_mask=True, 
-                 use_query_mask=False, mask_pos='before', whiten_type=[None], temperature=None, use_softmax=True):
+                 lr_mult=None, use_out=True, out_bn=True, mask_type='common', use_key_mask=True, 
+                 use_query_mask=False, mask_pos='after', whiten_type=[None], temperature=None, use_softmax=True):
 
         assert mask_type in ['softmax', 'sigmoid']
         assert mask_pos in ['before', 'after']
@@ -37,6 +37,10 @@ class MaskNonLocal2d(nn.Module):
         else:
             self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
             self.conv_out = None
+        if out_bn:
+            self.out_bn = nn.BatchNorm2d(inplanes)
+        else:
+            self.out_bn = None
         self.softmax = nn.Softmax(dim=2)
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
@@ -135,7 +139,7 @@ class MaskNonLocal2d(nn.Module):
                 if self.use_softmax:
                     sim_map = self.softmax(sim_map)
 
-            if self.mask_type == 'sigmoid':
+            elif self.mask_type == 'sigmoid':
                 if self.use_softmax:
                     sim_map = self.softmax(sim_map)
                 if self.use_key_mask:
@@ -144,6 +148,14 @@ class MaskNonLocal2d(nn.Module):
                 if self.use_query_mask:
                     query_mask=self.sigmoid_query(query_mask)
                     sim_map=sim_map*query_mask
+            elif self.mask_type == 'common':
+                if self.use_key_mask:
+                    sim_map += key_mask
+                if self.use_query_mask:
+                    sim_map += query_mask
+                sim_map = sim_map/self.scale
+                sim_map = sim_map/self.temperature
+                sim_map = self.softmax(sim_map)
                 
         # [N, T x H x W, C']
         out = torch.bmm(sim_map, value.transpose(1, 2))
@@ -154,8 +166,8 @@ class MaskNonLocal2d(nn.Module):
         # [N, C, T,  H, W]
         if self.conv_out is not None:
             out = self.conv_out(out)
-        # if self.norm is not None:
-        #     out = self.norm(out)
+        if self.out_bn:
+            out = self.out_bn(out)
         out = self.gamma * out
 
         out = residual + out
