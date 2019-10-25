@@ -148,14 +148,14 @@ class MaskNonLocal2d(nn.Module):
                 if self.use_query_mask:
                     query_mask=self.sigmoid_query(query_mask)
                     sim_map=sim_map*query_mask
+                    
             elif self.mask_type == 'common':
                 if self.use_key_mask:
                     sim_map += key_mask
                 if self.use_query_mask:
                     sim_map += query_mask
-                sim_map = sim_map/self.scale
-                sim_map = sim_map/self.temperature
-                sim_map = self.softmax(sim_map)
+                if self.use_softmax:
+                    sim_map = self.softmax(sim_map)
                 
         # [N, T x H x W, C']
         out = torch.bmm(sim_map, value.transpose(1, 2))
