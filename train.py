@@ -178,8 +178,20 @@ def main():
                                             crop_size=input_size,scale=args.random_scale, mirror=args.random_mirror, mean=IMG_MEAN),
                                   batch_size=cfg.train_cfg.batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
-    optimizer = optim.SGD([{'params': filter(lambda p: p.requires_grad, deeplab.parameters()), 'lr': cfg.train_cfg.learning_rate }],
-                lr=cfg.train_cfg.learning_rate, momentum=cfg.train_cfg.momentum,weight_decay=cfg.train_cfg.weight_decay)
+    def get_params(tmp_model):
+        lr_wd_group = []
+        lr_nowd_group = []
+        for name, p in tmp_model.named_parameters():
+            if p.requires_grad:
+                if p.__dict__.get('wd', -1) == 0:
+                    lr_nowd_group.append(p)
+                    print(name)
+                else:
+                    lr_wd_group.append(p)
+        return [dict(params=lr_wd_group), dict(params=lr_nowd_group, weight_decay=0.0)]
+
+
+    optimizer = optim.SGD(get_params(deeplab), lr=cfg.train_cfg.learning_rate, momentum=cfg.train_cfg.momentum,weight_decay=cfg.train_cfg.weight_decay)
     optimizer.zero_grad()
 
     for i_iter, batch in enumerate(trainloader):
