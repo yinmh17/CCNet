@@ -117,8 +117,8 @@ class _NonLocalNd_nowd(nn.Module):
             query -= query_mean
             key_var = key.var(2).unsqueeze(2)
             query_var = query.var(2).unsqueeze(2)
-            key /= torch.sqrt(key_var + self.eps)
-            query /= torch.sqrt(query_var + self.eps)
+            key = key / torch.sqrt(key_var + self.eps)
+            query = query / torch.sqrt(query_var + self.eps)
         if 'ln_nostd' in self.whiten_type :
             key_mean = key.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
             query_mean = query.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
@@ -131,8 +131,8 @@ class _NonLocalNd_nowd(nn.Module):
             query -= query_mean
             key_var = key.view(1,-1).var(1).unsqueeze(1).unsqueeze(2)
             query_var = query.view(1,-1).var(1).unsqueeze(1).unsqueeze(2)
-            key /= torch.sqrt(key_var + self.eps)
-            query /= torch.sqrt(query_var + self.eps)
+            key = key / torch.sqrt(key_var + self.eps)
+            query = query / torch.sqrt(query_var + self.eps)
 
         # [N, T x H x W, T x H' x W']
         sim_map = torch.bmm(query.transpose(1, 2), key)
