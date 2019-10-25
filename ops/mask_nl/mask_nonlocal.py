@@ -11,7 +11,7 @@ class MaskNonLocal2d(nn.Module):
                  lr_mult=None, use_out=True, out_bn=True, mask_type='common', use_key_mask=True, 
                  use_query_mask=False, mask_pos='after', whiten_type=[None], temperature=None, use_softmax=True):
 
-        assert mask_type in ['softmax', 'sigmoid']
+        assert mask_type in ['softmax', 'sigmoid', 'common']
         assert mask_pos in ['before', 'after']
         conv_nd = nn.Conv2d
         if downsample:
