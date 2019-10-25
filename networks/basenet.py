@@ -14,7 +14,7 @@ import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
 from ops import NonLocal2d, NonLocal2d_bn, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
-from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock
+from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d
 
 
 BatchNorm2d = functools.partial(InPlaceABNSync, activation='none')
@@ -120,7 +120,7 @@ class GCBModule(nn.Module):
     def __init__(self, in_channels, out_channels, num_classes, cfg):
         super(GCBModule, self).__init__()
         type = cfg.type
-        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'proj_multi', 'proj_spatial']
+        assert type in ['gcb', 'nl', 'nl_bn', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'mask_nl']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -131,6 +131,9 @@ class GCBModule(nn.Module):
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type,
                                      temperature=cfg.temp, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn)
+        elif type == 'mask_nl':
+            self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type, temperature=cfg.temp,
+                                      use_out=cfg.use_out, out_bn=cfg.out_bn, mask_type=cfg.mask_type, use_key_mask=True, use_query_mask=False, mask_pos='after', use_softmax=True)
         elif type == 'multi':
             self.ctb = MultiheadBlock(inter_channels, ratio=1./4, one_fc=True, 
                                       head_num=8, pre_group=1, post_group=8)
@@ -140,14 +143,8 @@ class GCBModule(nn.Module):
         elif type == 'multihead_relation':
             self.ctb = MultiheadRelationBlock(inter_channels, ratio=1.0/4, one_fc=True, head_num=8,
                                           pre_group=1, post_group=1, geo_feature_dim=64, key_feature_dim=64)
-        elif type == 'multi_spatial':
-            self.ctb = MultiheadSpatialBlock(inter_channels, ratio=1./4, head_num=8)
         elif type == 'glore':
             self.ctb = GloreUnit(inter_channels, inter_channels//4, interact = 'node')
-        elif type == 'proj_multi':
-            self.ctb = ProjMultiheadBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=1, pre_group=1, post_group=1)
-        elif type == 'proj_spatial':
-            self.ctb = ProjSpatialBlock(inter_channels, ratio=1./4, one_fc=True, mask_num=8, pre_group=1, post_group=1, share_proj=True)
         else:
             self.ctb = None
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
