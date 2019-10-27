@@ -89,7 +89,7 @@ def pad_image(img, target_size):
     padded_img = np.pad(img, ((0, 0), (0, 0), (0, rows_missing), (0, cols_missing)), 'constant')
     return padded_img
 
-def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence):
+def predict_sliding(net, image, tile_size, classes, recurrence):
     interp = nn.Upsample(size=tile_size, mode='bilinear', align_corners=True)
     image_size = image.shape
     overlap = 1.0/3.0
@@ -154,10 +154,11 @@ def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, 
         scale = float(scale)
         print("Predicting image scaled by %f" % scale)
         scale_image = ndimage.zoom(image, (1.0, 1.0, scale, scale), order=1, prefilter=False)
-        scaled_probs = predict_whole(net, scale_image, tile_size, recurrence)
+        scaled_probs = predict_sliding(net, scale_image, (769,769), classes, recurrence)
         if flip_evaluation == True:
-            flip_scaled_probs = predict_whole(net, scale_image[:,:,:,::-1].copy(), tile_size, recurrence)
+            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (769,769), classes, recurrence)
             scaled_probs = 0.5 * (scaled_probs + flip_scaled_probs[:,::-1,:])
+        scaled_probs = cv2.resize(scaled_probs, (W_,H_), cv2.INTER_LINEAR)
         full_probs += scaled_probs
     full_probs /= len(scales)
     return full_probs
