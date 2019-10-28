@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import torch
 import torch.nn as nn
@@ -235,7 +236,7 @@ def main():
         #         writer.add_image('Labels/'+str(index), lab, i_iter)
         #         writer.add_image('preds/'+str(index), preds_colors[index], i_iter)
 
-            print('iter = {} of {} completed, loss = {}'.format(i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
+            print('Time {}, iter = {} of {} completed, loss = {}'.format(time.strftime("%Y-%m-%d %H:%M:%S"), i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
             if 'nowd' in cfg.model.module.type:
                 print('convkey: mean {}, std {}, absmax {}'.format(
                     model.module.head.ctb.conv_key.weight.mean(), model.module.head.ctb.conv_key.weight.var().sqrt(), model.module.head.ctb.conv_key.weight.abs().max()))

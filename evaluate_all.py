@@ -1,4 +1,6 @@
 import argparse
+import time
+
 import scipy
 from scipy import ndimage
 import cv2
@@ -218,7 +220,7 @@ def main():
 
         for index, batch in enumerate(testloader):
             if index % 100 == 0:
-                print('%d processd'%(index))
+                print('Time %s, %d processd'%(time.strftime("%Y-%m-%d %H:%M:%S"), index))
             image, label, size, name = batch
             size = size[0].numpy()
             with torch.no_grad():
