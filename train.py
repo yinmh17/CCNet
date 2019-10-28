@@ -235,7 +235,7 @@ def main():
         #         writer.add_image('Labels/'+str(index), lab, i_iter)
         #         writer.add_image('preds/'+str(index), preds_colors[index], i_iter)
 
-        print('iter = {} of {} completed, loss = {}'.format(i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
+            print('iter = {} of {} completed, loss = {}'.format(i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
 
         if i_iter >= cfg.train_cfg.num_steps-1:
             print('save model ...')

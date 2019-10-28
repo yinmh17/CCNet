@@ -99,7 +99,7 @@ def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence)
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((image_size[2] - tile_size[0]) / stride) + 1)  # strided convolution formula
     tile_cols = int(ceil((image_size[3] - tile_size[1]) / stride) + 1)
-    print("Need %i x %i prediction tiles @ stride %i px" % (tile_cols, tile_rows, stride))
+    # print("Need %i x %i prediction tiles @ stride %i px" % (tile_cols, tile_rows, stride))
     full_probs = np.zeros((image_size[2], image_size[3], classes))
     count_predictions = np.zeros((image_size[2], image_size[3], classes))
     tile_counter = 0
@@ -118,7 +118,7 @@ def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence)
             # plt.imshow(padded_img)
             # plt.show()
             tile_counter += 1
-            print("Predicting tile %i" % tile_counter)
+            # print("Predicting tile %i" % tile_counter)
             padded_prediction = net(Variable(torch.from_numpy(padded_img), volatile=True).cuda(), recurrence)
             if isinstance(padded_prediction, list):
                 padded_prediction = padded_prediction[0]
@@ -154,7 +154,7 @@ def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, 
     full_probs = np.zeros((H_, W_, classes))  
     for scale in scales:
         scale = float(scale)
-        print("Predicting image scaled by %f" % scale)
+        # print("Predicting image scaled by %f" % scale)
         scale_image = ndimage.zoom(image, (1.0, 1.0, scale, scale), order=1, prefilter=False)
         scaled_probs = predict_whole(net, scale_image, tile_size, recurrence)
         if flip_evaluation == True:

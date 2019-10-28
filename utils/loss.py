@@ -68,7 +68,7 @@ class OhemCrossEntropy2d(nn.Module):
             pred = prob[label, np.arange(len(label), dtype=np.int32)]
             kept_flag = pred <= threshold
             valid_inds = valid_inds[kept_flag]
-            print('Labels: {} {}'.format(len(valid_inds), threshold))
+            # print('Labels: {} {}'.format(len(valid_inds), threshold))
 
         label = input_label[valid_inds].copy()
         input_label.fill(self.ignore_label)
