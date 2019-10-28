@@ -92,6 +92,8 @@ def get_arguments():
                         help="choose the samples with correct probability underthe threshold.")
     parser.add_argument("--ohem-keep", type=int, default=200000,
                         help="choose the samples with correct probability underthe threshold.")
+    parser.add_argument("--use-zip", type=str2bool, default='True',
+                        help="use zipfile as dataset")
     return parser.parse_args()
 
 args = get_arguments()
@@ -175,7 +177,7 @@ def main():
 
 
     trainloader = data.DataLoader(CSDataSet(cfg.data_cfg.data_dir, cfg.data_cfg.data_list, max_iters=cfg.train_cfg.num_steps*cfg.train_cfg.batch_size,
-                                            crop_size=input_size,scale=args.random_scale, mirror=args.random_mirror, mean=IMG_MEAN),
+                                            crop_size=input_size,scale=args.random_scale, mirror=args.random_mirror, mean=IMG_MEAN, use_zip=args.use_zip),
                                   batch_size=cfg.train_cfg.batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
     def get_params(tmp_model):

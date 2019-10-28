@@ -120,7 +120,7 @@ class VOCDataTestSet(data.Dataset):
         return image, name, size
 
 class CSDataSet(data.Dataset):
-    def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255):
+    def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255, use_zip=True):
         self.root = root
         self.list_path = list_path
         self.crop_h, self.crop_w = crop_size
@@ -128,6 +128,7 @@ class CSDataSet(data.Dataset):
         self.ignore_label = ignore_label
         self.mean = mean
         self.is_mirror = mirror
+        self.use_zip = use_zip
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip().split() for i_id in open(list_path)]
         if not max_iters==None:
@@ -137,8 +138,12 @@ class CSDataSet(data.Dataset):
         for item in self.img_ids:
             image_path, label_path = item
             name = osp.splitext(osp.basename(label_path))[0]
-            img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'),image_path)
-            label_file = osp.join(osp.join(self.root, 'gtFine_trainvaltest.zip@'),label_path)
+            if self.use_zip:
+                img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'), image_path)
+                label_file = osp.join(osp.join(self.root, 'gtFine_trainvaltest.zip@'), label_path)
+            else:
+                img_file = osp.join(self.root, image_path)
+                label_file = osp.join(self.root, label_path)
             self.files.append({
                 "img": img_file,
                 "label": label_file,
@@ -173,8 +178,12 @@ class CSDataSet(data.Dataset):
 
     def __getitem__(self, index):
         datafiles = self.files[index]
-        image = ZipReader.imread(datafiles["img"],flag='color')
-        label = ZipReader.imread(datafiles["label"],flag='grayscale')
+        if self.use_zip:
+            image = ZipReader.imread(datafiles["img"],flag='color')
+            label = ZipReader.imread(datafiles["label"],flag='grayscale')
+        else:
+            image = cv2.imread(datafiles["img"], cv2.IMREAD_COLOR)
+            label = cv2.imread(datafiles["label"], cv2.IMREAD_GRAYSCALE)
         label = self.id2trainId(label)
         size = image.shape
         name = datafiles["name"]
@@ -212,11 +221,12 @@ class CSDataSet(data.Dataset):
 
 
 class CSDataTestSet(data.Dataset):
-    def __init__(self, root, list_path, crop_size=(505, 505), mean=(128, 128, 128)):
+    def __init__(self, root, list_path, crop_size=(505, 505), mean=(128, 128, 128), use_zip=True):
         self.root = root
         self.list_path = list_path
         self.crop_h, self.crop_w = crop_size
         self.mean = mean
+        self.use_zip = use_zip
         # self.mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
         self.img_ids = [i_id.strip() for i_id in open(list_path)]
         self.files = [] 
@@ -224,7 +234,10 @@ class CSDataTestSet(data.Dataset):
         for item in self.img_ids:
             image_path = item
             name = osp.splitext(osp.basename(image_path))[0]
-            img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'),image_path)
+            if self.use_zip:
+                img_file = osp.join(osp.join(self.root, 'leftImg8bit_trainvaltest.zip@'),image_path)
+            else:
+                img_file = osp.join(self.root, image_path)
             self.files.append({
                 "img": img_file
             })
@@ -234,7 +247,10 @@ class CSDataTestSet(data.Dataset):
 
     def __getitem__(self, index):
         datafiles = self.files[index]
-        image = ZipReader.imread(datafiles["img"],flag='color')
+        if self.use_zip:
+            image = ZipReader.imread(datafiles["img"],flag='color')
+        else:
+            image = cv2.imread(datafiles["img"], cv2.IMREAD_COLOR)
         size = image.shape
         name = osp.splitext(osp.basename(datafiles["img"]))[0]
         image = np.asarray(image, np.float32)

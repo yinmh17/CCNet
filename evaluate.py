@@ -56,6 +56,8 @@ def get_arguments():
     parser.add_argument("--whole", type=bool, default=False,
                         help="use whole input size.")
     parser.add_argument('--config', help='train config file path')
+    parser.add_argument("--use-zip", type=bool, default=True,
+                        help="use zipfile as input.")
     return parser.parse_args()
 
 def get_palette(num_cls):
@@ -203,7 +205,7 @@ def main():
     model.eval()
     model.cuda()
 
-    testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, scale=False, mirror=False), 
+    testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip), 
                                     batch_size=1, shuffle=False, pin_memory=True)
 
     data_list = []
