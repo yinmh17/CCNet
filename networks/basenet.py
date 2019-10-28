@@ -130,7 +130,7 @@ class GCBModule(nn.Module):
             self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=cfg.downsample, use_out=cfg.use_out, out_bn=cfg.out_bn)
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type,
-                                     temperature=cfg.temp, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn)
+                                     temperature=cfg.temp, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn, sync_bn=cfg.sync_bn)
 
         elif type == 'nl_nowd':
             self.ctb = NonLocal2d_nowd(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type, 
