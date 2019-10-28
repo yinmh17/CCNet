@@ -214,6 +214,13 @@ def main():
         if i_iter % 100 == 0:
             writer.add_scalar('learning_rate', lr, i_iter)
             writer.add_scalar('loss', loss.data.cpu().numpy(), i_iter)
+            if 'nowd' in cfg.model.module.type:
+                writer.add_scalar('convkey_mean' model.head.ctb.conv_key.weight.mean(), i_iter)
+                writer.add_scalar('convkey_std' model.head.ctb.conv_key.weight.var().sqrt(), i_iter)
+                writer.add_scalar('convquery_max' model.head.ctb.conv_key.weight.abs().max(), i_iter)
+                writer.add_scalar('convquery_std' model.head.ctb.conv_query.weight.var().sqrt(), i_iter)
+                writer.add_scalar('convquery_mean' model.head.ctb.conv_query.weight.mean(), i_iter)
+                writer.add_scalar('convquery_max' model.head.ctb.conv_query.weight.abs().max(), i_iter)
 
         # if i_iter % 5000 == 0:
         #     images_inv = inv_preprocess(images, args.save_num_images, IMG_MEAN)
