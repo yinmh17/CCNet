@@ -219,7 +219,7 @@ def main():
             if 'nowd' in cfg.model.module.type:
                 writer.add_scalar('convkey_mean', model.module.head.ctb.conv_key.weight.mean(), i_iter)
                 writer.add_scalar('convkey_std', model.module.head.ctb.conv_key.weight.var().sqrt(), i_iter)
-                writer.add_scalar('convquery_max', model.module.head.ctb.conv_key.weight.abs().max(), i_iter)
+                writer.add_scalar('convkey_max', model.module.head.ctb.conv_key.weight.abs().max(), i_iter)
                 writer.add_scalar('convquery_std', model.module.head.ctb.conv_query.weight.var().sqrt(), i_iter)
                 writer.add_scalar('convquery_mean', model.module.head.ctb.conv_query.weight.mean(), i_iter)
                 writer.add_scalar('convquery_max', model.module.head.ctb.conv_query.weight.abs().max(), i_iter)
@@ -236,6 +236,11 @@ def main():
         #         writer.add_image('preds/'+str(index), preds_colors[index], i_iter)
 
             print('iter = {} of {} completed, loss = {}'.format(i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
+            if 'nowd' in cfg.model.module.type:
+                print('convkey: mean {}, std {}, absmax {}'.format(
+                    model.module.head.ctb.conv_key.weight.mean(), model.module.head.ctb.conv_key.weight.var().sqrt(), model.module.head.ctb.conv_key.weight.abs().max()))
+                print('convquery: mean {}, std {}, absmax {}'.format(
+                    model.module.head.ctb.conv_query.weight.mean(), model.module.head.ctb.conv_query.weight.var().sqrt(), model.module.head.ctb.conv_query.weight.abs().max()))
 
         if i_iter >= cfg.train_cfg.num_steps-1:
             print('save model ...')
