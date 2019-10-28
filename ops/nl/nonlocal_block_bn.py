@@ -4,7 +4,7 @@ from libs import InPlaceABN, InPlaceABNSync
 from torch import nn
 from torch.nn import init
 import math
-
+import functools
 SyncNorm2d = functools.partial(InPlaceABNSync, activation='none')
 
 class _NonLocalNd_bn(nn.Module):
