@@ -23,6 +23,7 @@ model = dict(
         with_gc=True,
         use_out=False,
         out_bn=False,
+        sync_bn=False,
         value_split=True,
         gc_beta=False,
     )
