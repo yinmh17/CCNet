@@ -170,7 +170,7 @@ class _NonLocalNd_bn(nn.Module):
 class NonLocal2d_bn(_NonLocalNd_bn):
 
     def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, out_bn=False, sync_bn=False, whiten_type=['channel'], temperature=1.0, with_gc=False):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, sync_bn=sync_bn, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
