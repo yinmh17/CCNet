@@ -9,7 +9,8 @@ SyncNorm2d = functools.partial(InPlaceABNSync, activation='none')
 
 class _NonLocalNd_bn(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, out_bn, sync_bn, whiten_type, temperature, with_gc):
+    def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, out_bn, sync_bn, whiten_type, temperature, 
+                 with_gc, value_split, gc_beta):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['channel', 'spatial']
         if dim == 3:
@@ -38,11 +39,21 @@ class _NonLocalNd_bn(nn.Module):
         self.conv_query = conv_nd(inplanes, planes, kernel_size=1)
         self.conv_key = conv_nd(inplanes, planes, kernel_size=1)
         if use_out:
-            self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
-            self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
+            if with_gc and value_split:
+                self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
+                self.conv_gc_value = conv_nd(inplanes, planes, kernel_size=1)
+                self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
+            else:
+                self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
+                self.conv_out = conv_nd(planes, inplanes, kernel_size=1, bias=False)
         else:
-            self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
-            self.conv_out = None
+            if with_gc and value_split:
+                self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
+                self.conv_gc_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
+                self.conv_out = None
+            else:
+                self.conv_value = conv_nd(inplanes, inplanes, kernel_size=1, bias=False)
+                self.conv_out = None
         if out_bn:
             if sync_bn:
                 self.out_bn = SyncNorm2d(inplanes)
@@ -63,10 +74,13 @@ class _NonLocalNd_bn(nn.Module):
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
+        self.beta = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(planes)
         self.whiten_type = whiten_type
         self.temperature = temperature
         self.with_gc = with_gc
+        self.value_split = value_split
+        self.gc_beta = gc_beta
         
         self.reset_parameters()
         self.reset_lr_mult(lr_mult)
@@ -104,7 +118,11 @@ class _NonLocalNd_bn(nn.Module):
         # [N, C', T, H', W']
         key = self.conv_key(input_x)
         value = self.conv_value(input_x)
-
+        
+        if self.with_gc and self.value_split:
+            value_gc = self.conv_gc_value(input_x)
+            value_gc = value_gc.view(value_gc.size(0), value_gc.size(1), -1)
+            
         # [N, C', H x W]
         query = query.view(query.size(0), query.size(1), -1)
         # [N, C', H' x W']
@@ -153,7 +171,12 @@ class _NonLocalNd_bn(nn.Module):
             mask = mask.view(mask.size(0), mask.size(1), -1)
             mask = self.softmax(mask)
             # [N, C', 1, 1]
-            out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
+            if self.value_split:
+                out_gc = torch.bmm(value_gc, mask.permute(0,2,1)).unsqueeze(-1)
+            else:
+                out_gc = torch.bmm(value, mask.permute(0,2,1)).unsqueeze(-1)
+            if self.gc_beta:
+                out_gc = self.beta * out_gc
             out_sim = out_sim+out_gc
             
         # [N, C, T,  H, W]
@@ -169,8 +192,8 @@ class _NonLocalNd_bn(nn.Module):
 
 class NonLocal2d_bn(_NonLocalNd_bn):
 
-    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, out_bn=False, sync_bn=False, whiten_type=['channel'], temperature=1.0, with_gc=False):
-        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, sync_bn=sync_bn, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc)
+    def __init__(self, inplanes, planes, downsample=True, use_gn=False, lr_mult=None, use_out=False, out_bn=False, sync_bn=False, whiten_type=['channel'], temperature=1.0, with_gc=False, value_split=False, gc_beta=False):
+        super(NonLocal2d_bn, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, use_gn=use_gn, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, sync_bn=sync_bn, whiten_type=whiten_type, temperature=temperature, with_gc=with_gc, value_split=value_split, gc_beta=gc_beta)
 
 
 class NonLocal3d_bn(_NonLocalNd_bn):
