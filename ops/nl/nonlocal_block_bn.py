@@ -74,7 +74,8 @@ class _NonLocalNd_bn(nn.Module):
         self.downsample = max_pool
         # self.norm = nn.GroupNorm(num_groups=32, num_channels=inplanes) if use_gn else InPlaceABNSync(num_features=inplanes)
         self.gamma = nn.Parameter(torch.zeros(1))
-        self.beta = nn.Parameter(torch.zeros(1))
+        if gc_beta:
+            self.beta = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(planes)
         self.whiten_type = whiten_type
         self.temperature = temperature
