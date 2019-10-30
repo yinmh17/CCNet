@@ -9,7 +9,7 @@ class _NonLocalNd_nowd(nn.Module):
 
     def __init__(self, dim, inplanes, planes, downsample, use_gn, lr_mult, use_out, out_bn, whiten_type, weight_init_scale, with_gc, eps):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
-        #assert whiten_type in ['in', 'in_nostd', 'ln', 'ln_nostd'] # all without affine, in == channel whiten
+        #assert whiten_type in ['in', 'in_nostd', 'ln', 'ln_nostd', 'fln', 'fln_nostd'] # all without affine, in == channel whiten
         if dim == 3:
             conv_nd = nn.Conv3d
             if downsample:
@@ -110,7 +110,7 @@ class _NonLocalNd_nowd(nn.Module):
             query_mean = query.mean(2).unsqueeze(2)
             key -= key_mean
             query -= query_mean
-        if 'in' in self.whiten_type :
+        elif 'in' in self.whiten_type :
             key_mean = key.mean(2).unsqueeze(2)
             query_mean = query.mean(2).unsqueeze(2)
             key -= key_mean
@@ -119,12 +119,26 @@ class _NonLocalNd_nowd(nn.Module):
             query_var = query.var(2).unsqueeze(2)
             key = key / torch.sqrt(key_var + self.eps)
             query = query / torch.sqrt(query_var + self.eps)
-        if 'ln_nostd' in self.whiten_type :
+        elif 'ln_nostd' in self.whiten_type :
+            key_mean = key.view(key.shape[0],-1).mean(1).unsqueeze(1).unsqueeze(2)
+            query_mean = query.view(query.shape[0],-1).mean(1).unsqueeze(1).unsqueeze(2)
+            key -= key_mean
+            query -= query_mean
+        elif 'ln' in self.whiten_type:
+            key_mean = key.view(key.shape[0],-1).mean(1).unsqueeze(1).unsqueeze(2)
+            query_mean = query.view(query.shape[0],-1).mean(1).unsqueeze(1).unsqueeze(2)
+            key -= key_mean
+            query -= query_mean
+            key_var = key.view(key.shape[0],-1).var(1).unsqueeze(1).unsqueeze(2)
+            query_var = query.view(query.shape[0],-1).var(1).unsqueeze(1).unsqueeze(2)
+            key = key / torch.sqrt(key_var + self.eps)
+            query = query / torch.sqrt(query_var + self.eps)
+        elif 'fln_nostd' in self.whiten_type :
             key_mean = key.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
             query_mean = query.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
             key -= key_mean
             query -= query_mean
-        if 'ln' in self.whiten_type:
+        elif 'fln' in self.whiten_type:
             key_mean = key.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
             query_mean = query.view(1,-1).mean(1).unsqueeze(1).unsqueeze(2)
             key -= key_mean
