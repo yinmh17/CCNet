@@ -32,6 +32,14 @@ NUM_STEPS = 500 # Number of images in the validation set.
 INPUT_SIZE = '769,769'
 RESTORE_FROM = './deeplab_resnet.ckpt'
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def get_arguments():
     """Parse all the arguments provided from the CLI.
     
@@ -58,7 +66,7 @@ def get_arguments():
     parser.add_argument("--whole", type=bool, default=False,
                         help="use whole input size.")
     parser.add_argument('--config', help='train config file path')
-    parser.add_argument("--use-zip", type=bool, default=True,
+    parser.add_argument("--use-zip", type=str2bool, default=True,
                         help="use zipfile as dataset.")
     return parser.parse_args()
 
