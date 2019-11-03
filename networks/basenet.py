@@ -133,8 +133,15 @@ class GCBModule(nn.Module):
                                      temperature=cfg.temp, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn, sync_bn=cfg.get('sync_bn', False), value_split=cfg.get('value_split', False), gc_beta=cfg.get('gc_beta', False))
 
         elif type == 'nl_nowd':
-            self.ctb = NonLocal2d_nowd(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type, 
-                                       weight_init_scale=cfg.weight_init_scale, with_gc=cfg.with_gc, use_out=cfg.use_out, out_bn=cfg.out_bn)
+            self.ctb = NonLocal2d_nowd(inter_channels, inter_channels // 2,
+                                       downsample=cfg.get('downsample', True),
+                                       whiten_type=cfg.get('whiten_type',['ln_nostd']), 
+                                       weight_init_scale=cfg.get('weight_init_scale', 1.0),
+                                       with_gc=cfg.get('with_gc', False),
+                                       with_nl=cfg.get('with_nl', True),
+                                       nowd=cfg.get('nowd', ['nl']),
+                                       use_out=cfg.get('use_out', False),
+                                       out_bn=cfg.get('out_bn', False))
         elif type == 'mask_nl':
             self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type, temperature=cfg.temp,
                                       use_out=cfg.use_out, out_bn=cfg.out_bn, mask_type=cfg.mask_type, use_key_mask=True, use_query_mask=False, mask_pos='after', use_softmax=True)
