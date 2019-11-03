@@ -68,6 +68,8 @@ def get_arguments():
     parser.add_argument('--config', help='train config file path')
     parser.add_argument("--use-zip", type=str2bool, default=True,
                         help="use zipfile as input.")
+    parser.add_argument("--overlap", type=float, default=1.0/3.0,
+                        help="overlap of sliding window.")
     return parser.parse_args()
 
 def get_palette(num_cls):
@@ -101,10 +103,10 @@ def pad_image(img, target_size):
     padded_img = np.pad(img, ((0, 0), (0, 0), (0, rows_missing), (0, cols_missing)), 'constant')
     return padded_img
 
-def predict_sliding(net, image, tile_size, classes, recurrence):
+def predict_sliding(net, image, tile_size, classes, recurrence, overlap=1.0/3.0):
     interp = nn.Upsample(size=tile_size, mode='bilinear', align_corners=True)
     image_size = image.shape
-    overlap = 1.0/3.0
+    #overlap = 1.0/3.0
 
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((image_size[2] - tile_size[0]) / stride) + 1)  # strided convolution formula
@@ -153,7 +155,7 @@ def predict_whole(net, image, tile_size, recurrence):
     prediction = interp(prediction).cpu().data[0].numpy().transpose(1,2,0)
     return prediction
 
-def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, recurrence):
+def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, recurrence, overlap=1.0/3.0):
     """
     Predict an image by looking at it with different scales.
         We choose the "predict_whole_img" for the image with less than the original input size,
@@ -166,9 +168,9 @@ def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, 
         scale = float(scale)
         # print("Predicting image scaled by %f" % scale)
         scale_image = ndimage.zoom(image, (1.0, 1.0, scale, scale), order=1, prefilter=False)
-        scaled_probs = predict_sliding(net, scale_image, (769,769), classes, recurrence)
+        scaled_probs = predict_sliding(net, scale_image, (769,769), classes, recurrence, overlap=overlap)
         if flip_evaluation == True:
-            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (769,769), classes, recurrence)
+            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (769,769), classes, recurrence, overlap=overlap)
             scaled_probs = 0.5 * (scaled_probs + flip_scaled_probs[:,::-1,:])
         scaled_probs = cv2.resize(scaled_probs, (W_,H_), cv2.INTER_LINEAR)
         full_probs += scaled_probs
@@ -233,9 +235,9 @@ def main():
         size = size[0].numpy()
         with torch.no_grad():
             if args.whole:
-                output = predict_multiscale(model, image, input_size, [0.75, 1.0, 1.25], args.num_classes, True, args.recurrence)
+                output = predict_multiscale(model, image, input_size, [0.75, 1.0, 1.25], args.num_classes, True, args.recurrence, overlap=args.overlap)
             else:
-                output = predict_sliding(model, image.numpy(), input_size, args.num_classes, args.recurrence)
+                output = predict_sliding(model, image.numpy(), input_size, args.num_classes, args.recurrence, overlap=args.overlap)
         # padded_prediction = model(Variable(image, volatile=True).cuda())
         # output = interp(padded_prediction).cpu().data[0].numpy().transpose(1,2,0)
         seg_pred = np.asarray(np.argmax(output, axis=2), dtype=np.uint8)
