@@ -22,7 +22,7 @@ model = dict(
         weight_init_scale=0.5,
         with_gc=True,
         with_nl=True,
-        nowd=['nl','gc']
+        nowd=['nl','gc'],
         use_out=False,
         out_bn=False,
     )
