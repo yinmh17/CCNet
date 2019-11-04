@@ -17,9 +17,9 @@ model = dict(
     ),
     module=dict(
         type='nl_nowd',
-        downsample=False,
-        whiten_type=['in_nostd'],
-        weight_init_scale=0.5,
+        downsample=True,
+        whiten_type=['ln_nostd'],
+        weight_init_scale=1.0,
         with_gc=True,
         use_out=False,
         out_bn=False,
