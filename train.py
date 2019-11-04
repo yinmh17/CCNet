@@ -217,7 +217,7 @@ def main():
         if i_iter % 100 == 0:
             writer.add_scalar('learning_rate', lr, i_iter)
             writer.add_scalar('loss', loss.data.cpu().numpy(), i_iter)
-            if 'nowd' in cfg.model.module.type and cfg.model.module.get('with_nl', False):
+            if 'nowd' in cfg.model.module.type and cfg.model.module.get('with_nl', True):
                 writer.add_scalar('convkey_mean', model.module.head.ctb.conv_key.weight.mean(), i_iter)
                 writer.add_scalar('convkey_std', model.module.head.ctb.conv_key.weight.var().sqrt(), i_iter)
                 writer.add_scalar('convkey_max', model.module.head.ctb.conv_key.weight.abs().max(), i_iter)
@@ -237,7 +237,7 @@ def main():
         #         writer.add_image('preds/'+str(index), preds_colors[index], i_iter)
 
             print('Time {}, iter = {} of {} completed, loss = {}'.format(time.strftime("%Y-%m-%d %H:%M:%S"), i_iter, cfg.train_cfg.num_steps, loss.data.cpu().numpy()))
-            if 'nowd' in cfg.model.module.type and cfg.model.module.get('with_nl', False):
+            if 'nowd' in cfg.model.module.type and cfg.model.module.get('with_nl', True):
                 print('convkey: mean {}, std {}, absmax {}'.format(
                     model.module.head.ctb.conv_key.weight.mean(), model.module.head.ctb.conv_key.weight.var().sqrt(), model.module.head.ctb.conv_key.weight.abs().max()))
                 print('convquery: mean {}, std {}, absmax {}'.format(
