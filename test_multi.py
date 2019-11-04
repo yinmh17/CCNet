@@ -232,6 +232,7 @@ def main():
         output_im = PILImage.fromarray(seg_pred)
         output_im.putpalette(palette)
         output_im.save('outputs/'+name[0]+'.png')
+    print('Test Finish!')
 
 
 if __name__ == '__main__':
