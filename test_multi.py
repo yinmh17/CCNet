@@ -59,6 +59,8 @@ def get_arguments():
     parser.add_argument('--config', help='train config file path')
     parser.add_argument("--use-zip", type=bool, default=True,
                         help="use zipfile as dataset.")
+    parser.add_argument("--overlap", type=float, default=1.0/3.0,
+                        help="overlap of sliding window.")
     return parser.parse_args()
 
 def get_palette(num_cls):
