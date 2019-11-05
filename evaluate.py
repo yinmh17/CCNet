@@ -24,12 +24,11 @@ from utils.utils import fromfile
 import torch.nn as nn
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
 
-DATA_DIRECTORY = 'cityscapes'
-DATA_LIST_PATH = './dataset/list/cityscapes/val.lst'
+DATA_DIRECTORY = 'context'
+DATA_LIST_PATH = './dataset/list/context/val.lst'
 IGNORE_LABEL = 255
-NUM_CLASSES = 19
-NUM_STEPS = 500 # Number of images in the validation set.
-INPUT_SIZE = '769,769'
+NUM_CLASSES = 60
+INPUT_SIZE = None
 RESTORE_FROM = './deeplab_resnet.ckpt'
 
 def str2bool(v):
@@ -168,9 +167,9 @@ def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, 
         scale = float(scale)
         # print("Predicting image scaled by %f" % scale)
         scale_image = ndimage.zoom(image, (1.0, 1.0, scale, scale), order=1, prefilter=False)
-        scaled_probs = predict_sliding(net, scale_image, (769,769), classes, recurrence, overlap=overlap)
+        scaled_probs = predict_sliding(net, scale_image, (520,520), classes, recurrence, overlap=overlap)
         if flip_evaluation == True:
-            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (769,769), classes, recurrence, overlap=overlap)
+            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (520,520), classes, recurrence, overlap=overlap)
             scaled_probs = 0.5 * (scaled_probs + flip_scaled_probs[:,::-1,:])
         scaled_probs = cv2.resize(scaled_probs, (W_,H_), cv2.INTER_LINEAR)
         full_probs += scaled_probs
@@ -203,11 +202,14 @@ def main():
     cfg=fromfile(args.config)
     # gpu0 = args.gpu
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
-    h, w = map(int, args.input_size.split(','))
-    if args.whole:
-        input_size = (1024, 2048)
+    if args.input_size is None:
+        input_size = None
     else:
-        input_size = (h, w)
+        h, w = map(int, args.input_size.split(','))
+        if args.whole:
+            input_size = (1024, 2048)
+        else:
+            input_size = (h, w)
 
     model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
     
@@ -217,14 +219,14 @@ def main():
     model.eval()
     model.cuda()
 
-    testloader = data.DataLoader(ContextDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048),
+    testloader = data.DataLoader(ContextDataSet(args.data_dir, args.data_list, crop_size=input_size,
                                                 mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip),
                                  batch_size=1, shuffle=False, pin_memory=True)
 
     data_list = []
     confusion_matrix = np.zeros((args.num_classes,args.num_classes))
     palette = get_palette(256)
-    interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True)
+    interp = nn.Upsample(size=input_size, mode='bilinear', align_corners=True)
 
     if not os.path.exists('outputs'):
         os.makedirs('outputs')

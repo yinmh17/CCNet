@@ -14,7 +14,7 @@ import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
 from networks.basenet import Res_Deeplab
-from dataset.datasets import CSDataSet
+from dataset.datasets import ContextDataSet
 from collections import OrderedDict
 import os
 import scipy.ndimage as nd
@@ -24,12 +24,11 @@ from utils.utils import fromfile
 import torch.nn as nn
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
 
-DATA_DIRECTORY = 'cityscapes'
-DATA_LIST_PATH = './dataset/list/cityscapes/val.lst'
+DATA_DIRECTORY = 'context'
+DATA_LIST_PATH = './dataset/list/context/val.lst'
 IGNORE_LABEL = 255
-NUM_CLASSES = 19
-NUM_STEPS = 500 # Number of images in the validation set.
-INPUT_SIZE = '769,769'
+NUM_CLASSES = 60
+INPUT_SIZE = None
 RESTORE_FROM = './deeplab_resnet.ckpt'
 
 def str2bool(v):
@@ -67,7 +66,9 @@ def get_arguments():
                         help="use whole input size.")
     parser.add_argument('--config', help='train config file path')
     parser.add_argument("--use-zip", type=str2bool, default=True,
-                        help="use zipfile as dataset.")
+                        help="use zipfile as input.")
+    parser.add_argument("--overlap", type=float, default=1.0/3.0,
+                        help="overlap of sliding window.")
     return parser.parse_args()
 
 def get_palette(num_cls):
@@ -101,10 +102,10 @@ def pad_image(img, target_size):
     padded_img = np.pad(img, ((0, 0), (0, 0), (0, rows_missing), (0, cols_missing)), 'constant')
     return padded_img
 
-def predict_sliding(net, image, tile_size, classes, flip_evaluation, recurrence):
+def predict_sliding(net, image, tile_size, classes, recurrence, overlap=1.0/3.0):
     interp = nn.Upsample(size=tile_size, mode='bilinear', align_corners=True)
     image_size = image.shape
-    overlap = 1.0/3.0
+    #overlap = 1.0/3.0
 
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((image_size[2] - tile_size[0]) / stride) + 1)  # strided convolution formula
@@ -153,7 +154,7 @@ def predict_whole(net, image, tile_size, recurrence):
     prediction = interp(prediction).cpu().data[0].numpy().transpose(1,2,0)
     return prediction
 
-def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, recurrence):
+def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, recurrence, overlap=1.0/3.0):
     """
     Predict an image by looking at it with different scales.
         We choose the "predict_whole_img" for the image with less than the original input size,
@@ -166,10 +167,11 @@ def predict_multiscale(net, image, tile_size, scales, classes, flip_evaluation, 
         scale = float(scale)
         # print("Predicting image scaled by %f" % scale)
         scale_image = ndimage.zoom(image, (1.0, 1.0, scale, scale), order=1, prefilter=False)
-        scaled_probs = predict_whole(net, scale_image, tile_size, recurrence)
+        scaled_probs = predict_sliding(net, scale_image, (520,520), classes, recurrence, overlap=overlap)
         if flip_evaluation == True:
-            flip_scaled_probs = predict_whole(net, scale_image[:,:,:,::-1].copy(), tile_size, recurrence)
+            flip_scaled_probs = predict_sliding(net, scale_image[:,:,:,::-1].copy(), (520,520), classes, recurrence, overlap=overlap)
             scaled_probs = 0.5 * (scaled_probs + flip_scaled_probs[:,::-1,:])
+        scaled_probs = cv2.resize(scaled_probs, (W_,H_), cv2.INTER_LINEAR)
         full_probs += scaled_probs
     full_probs /= len(scales)
     return full_probs
@@ -200,28 +202,33 @@ def main():
     cfg=fromfile(args.config)
     # gpu0 = args.gpu
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
-    h, w = map(int, args.input_size.split(','))
-    if args.whole:
-        input_size = (1024, 2048)
+    if args.input_size is None:
+        input_size = None
     else:
-        input_size = (h, w)
+        h, w = map(int, args.input_size.split(','))
+        if args.whole:
+            input_size = (1024, 2048)
+        else:
+            input_size = (h, w)
 
     model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
-    for i in range(59500,60001,100):
-        restore_from = 'snapshots/CS_scenes_%s.pth'%i
+
+    for i in range(29500, 30001, 100):
+        restore_from = 'snapshots/CS_scenes_%s.pth'%i 
         saved_state_dict = torch.load(restore_from)
         model.load_state_dict(saved_state_dict)
 
         model.eval()
         model.cuda()
 
-        testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip), 
-                                        batch_size=1, shuffle=False, pin_memory=True)
+        testloader = data.DataLoader(ContextDataSet(args.data_dir, args.data_list, crop_size=input_size,
+                                                mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip),
+                                 batch_size=1, shuffle=False, pin_memory=True)
 
         data_list = []
         confusion_matrix = np.zeros((args.num_classes,args.num_classes))
         palette = get_palette(256)
-        interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True)
+        interp = nn.Upsample(size=input_size, mode='bilinear', align_corners=True)
 
         if not os.path.exists('outputs'):
             os.makedirs('outputs')
@@ -233,18 +240,17 @@ def main():
             size = size[0].numpy()
             with torch.no_grad():
                 if args.whole:
-                    output = predict_multiscale(model, image, input_size, [0.75, 1.0, 1.25], args.num_classes, True, args.recurrence)
+                    output = predict_multiscale(model, image, input_size, [0.75, 1.0, 1.25], args.num_classes, True, args.recurrence, overlap=args.overlap)
                 else:
-                    output = predict_sliding(model, image.numpy(), input_size, args.num_classes, True, args.recurrence)
-            # padded_prediction = model(Variable(image, volatile=True).cuda())
-            # output = interp(padded_prediction).cpu().data[0].numpy().transpose(1,2,0)
+                    output = predict_sliding(model, image.numpy(), input_size, args.num_classes, args.recurrence, overlap=args.overlap)
+
             seg_pred = np.asarray(np.argmax(output, axis=2), dtype=np.uint8)
             output_im = PILImage.fromarray(seg_pred)
             output_im.putpalette(palette)
             output_im.save('outputs/'+name[0]+'.png')
 
             seg_gt = np.asarray(label[0].numpy()[:size[0],:size[1]], dtype=np.int)
-
+    
             ignore_index = seg_gt != 255
             seg_gt = seg_gt[ignore_index]
             seg_pred = seg_pred[ignore_index]
@@ -257,7 +263,7 @@ def main():
 
         IU_array = (tp / np.maximum(1.0, pos + res - tp))
         mean_IU = IU_array.mean()
-
+    
         # getConfusionMatrixPlot(confusion_matrix)
         print({'meanIU':mean_IU, 'IU_array':IU_array})
         with open('result.txt', 'a') as f:

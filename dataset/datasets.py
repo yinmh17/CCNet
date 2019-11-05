@@ -283,7 +283,9 @@ class ContextDataSet(data.Dataset):
     def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255, use_zip=True):
         self.root = root
         self.list_path = list_path
-        self.crop_h, self.crop_w = crop_size
+        self.crop_size = crop_size
+        if crop_size is not None:
+            self.crop_h, self.crop_w = crop_size
         self.scale = scale
         self.ignore_label = ignore_label
         self.mean = mean
@@ -336,6 +338,9 @@ class ContextDataSet(data.Dataset):
         image = np.asarray(image, np.float32)
         image -= self.mean
         img_h, img_w = label.shape
+        if self.crop_size is None:
+            self.crop_h = img_h
+            self.crop_w = img_w 
         pad_h = max(self.crop_h - img_h, 0)
         pad_w = max(self.crop_w - img_w, 0)
         if pad_h > 0 or pad_w > 0:
