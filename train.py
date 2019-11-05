@@ -15,7 +15,7 @@ import os
 from tqdm import tqdm
 import os.path as osp
 #from networks.gcnet import Res_Deeplab
-from dataset.datasets import CSDataSet
+from dataset.datasets import ContextDataSet
 #import matplotlib.pyplot as plt
 import random
 import timeit
@@ -176,9 +176,10 @@ def main():
     if not os.path.exists(cfg.train_cfg.snapshot_dir):
         os.makedirs(cfg.train_cfg.snapshot_dir)
 
-
-    trainloader = data.DataLoader(CSDataSet(cfg.data_cfg.data_dir, cfg.data_cfg.data_list, max_iters=cfg.train_cfg.num_steps*cfg.train_cfg.batch_size,
-                                            crop_size=input_size,scale=args.random_scale, mirror=args.random_mirror, mean=IMG_MEAN, use_zip=args.use_zip),
+    trainloader = data.DataLoader(ContextDataSet(cfg.data_cfg.data_dir, cfg.data_cfg.data_list,
+                                                 max_iters=cfg.train_cfg.num_steps*cfg.train_cfg.batch_size,
+                                                 crop_size=input_size,scale=args.random_scale,
+                                                 mirror=args.random_mirror, mean=IMG_MEAN, use_zip=args.use_zip),
                                   batch_size=cfg.train_cfg.batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
     def get_params(tmp_model):

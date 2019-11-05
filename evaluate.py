@@ -14,7 +14,7 @@ import torchvision.models as models
 import torch.nn.functional as F
 from torch.utils import data
 from networks.basenet import Res_Deeplab
-from dataset.datasets import CSDataSet
+from dataset.datasets import ContextDataSet
 from collections import OrderedDict
 import os
 import scipy.ndimage as nd
@@ -217,8 +217,9 @@ def main():
     model.eval()
     model.cuda()
 
-    testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip), 
-                                    batch_size=1, shuffle=False, pin_memory=True)
+    testloader = data.DataLoader(ContextDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048),
+                                                mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip),
+                                 batch_size=1, shuffle=False, pin_memory=True)
 
     data_list = []
     confusion_matrix = np.zeros((args.num_classes,args.num_classes))
