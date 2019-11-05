@@ -18,9 +18,11 @@ model = dict(
     module=dict(
         type='nl_nowd',
         downsample=True,
-        whiten_type=['ln_nostd'],
+        whiten_type=[], #['in_nostd'],
         weight_init_scale=0.5,
+        nowd=['nl'],
         with_gc=True,
+        with_nl=True,
         use_out=False,
         out_bn=False,
     )
