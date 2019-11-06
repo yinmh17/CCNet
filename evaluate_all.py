@@ -238,6 +238,8 @@ def main():
                 print('Time %s, %d processd'%(time.strftime("%Y-%m-%d %H:%M:%S"), index))
             image, label, size, name = batch
             size = size[0].numpy()
+            if args.input_size is None:
+                input_size = (size[0], size[1])
             with torch.no_grad():
                 if args.whole:
                     output = predict_multiscale(model, image, input_size, [0.75, 1.0, 1.25], args.num_classes, True, args.recurrence, overlap=args.overlap)
