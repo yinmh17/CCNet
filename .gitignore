@@ -3,5 +3,5 @@ __pycache__/
 *.so
 *.o
 
-snapshots
+snapshots*
 .gitignore
