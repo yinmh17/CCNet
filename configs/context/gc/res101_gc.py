@@ -45,7 +45,7 @@ train_cfg = dict(
 data_cfg = dict(
     data_dir='context',
     data_list='./dataset/list/context/train.lst',
-    ignore_label=255,
+    ignore_label=0,
     input_size='520,520',
     num_classes=60,
 )

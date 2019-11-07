@@ -26,7 +26,7 @@ IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
 
 DATA_DIRECTORY = 'context'
 DATA_LIST_PATH = './dataset/list/context/val.lst'
-IGNORE_LABEL = 255
+IGNORE_LABEL = 0
 NUM_CLASSES = 60
 INPUT_SIZE = None
 RESTORE_FROM = './deeplab_resnet.ckpt'
@@ -253,7 +253,7 @@ def main():
 
             seg_gt = np.asarray(label[0].numpy()[:size[0],:size[1]], dtype=np.int)
     
-            ignore_index = seg_gt != 255
+            ignore_index = seg_gt != args.ignore_label
             seg_gt = seg_gt[ignore_index]
             seg_pred = seg_pred[ignore_index]
             # show_all(gt, output)
