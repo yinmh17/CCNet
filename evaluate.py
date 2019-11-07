@@ -213,8 +213,8 @@ def main():
 
     model = Res_Deeplab(cfg.model,cfg.data_cfg.num_classes)
     
-    #saved_state_dict = torch.load(args.restore_from)
-    #model.load_state_dict(saved_state_dict)
+    saved_state_dict = torch.load(args.restore_from)
+    model.load_state_dict(saved_state_dict)
 
     model.eval()
     model.cuda()
