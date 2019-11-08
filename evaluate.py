@@ -139,7 +139,7 @@ def predict_sliding(net, image, tile_size, classes, recurrence, overlap=1.0/3.0)
             full_probs[y1:y2, x1:x2] += prediction  # accumulate the predictions also in the overlapping regions
 
     # average the predictions in the overlapping regions
-    full_probs /= count_predictions
+    full_probs /= (count_predictions+1e-6)
     # visualize normalization Weights
     # plt.imshow(np.mean(count_predictions, axis=2))
     # plt.show()
