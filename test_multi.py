@@ -102,7 +102,7 @@ def predict_sliding(net, image, tile_size, classes, recurrence, overlap=1.0/3.0)
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((image_size[2] - tile_size[0]) / stride) + 1)  # strided convolution formula
     tile_cols = int(ceil((image_size[3] - tile_size[1]) / stride) + 1)
-    # print("Need %i x %i prediction tiles @ stride %i px" % (tile_cols, tile_rows, stride))
+    print("Need %i x %i prediction tiles @ stride %i px" % (tile_cols, tile_rows, stride))
     full_probs = np.zeros((image_size[2], image_size[3], classes))
     count_predictions = np.zeros((image_size[2], image_size[3], classes))
     tile_counter = 0
