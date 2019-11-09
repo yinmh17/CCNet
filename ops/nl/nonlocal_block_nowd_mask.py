@@ -32,7 +32,7 @@ class _NonLocalNd_nowd_mask(nn.Module):
                 max_pool = None
             bn_nd = nn.BatchNorm1d
 
-        super(_NonLocalNd_nowd, self).__init__()
+        super(_NonLocalNd_nowd_mask, self).__init__()
 
         if use_out:
             self.conv_value = conv_nd(inplanes, planes, kernel_size=1)
