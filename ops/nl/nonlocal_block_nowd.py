@@ -7,7 +7,7 @@ import math
 
 class _NonLocalNd_nowd(nn.Module):
 
-    def __init__(self, dim, inplanes, planes, downsample, lr_mult, use_out, out_bn, whiten_type, weight_init_scale, with_gc, with_nl, eps, nowd):
+    def __init__(self, dim, inplanes, planes, downsample, lr_mult, use_out, out_bn, whiten_type, weight_init_scale, with_unary, with_gc, with_nl, eps, nowd):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
         #assert whiten_type in ['in', 'in_nostd', 'ln', 'ln_nostd', 'fln', 'fln_nostd'] # all without affine, in == channel whiten
         if dim == 3:
@@ -57,6 +57,7 @@ class _NonLocalNd_nowd(nn.Module):
         self.scale = math.sqrt(planes)
         self.whiten_type = whiten_type
         self.weight_init_scale = weight_init_scale
+        self.with_unary = with_unary
         self.with_gc = with_gc
         self.with_nl = with_nl
         self.nowd = nowd
@@ -179,6 +180,12 @@ class _NonLocalNd_nowd(nn.Module):
             # [N, C', T,  H, W]
             out_sim = out_sim.view(out_sim.size(0), out_sim.size(1), *x.size()[2:])
             out_sim = self.gamma * out_sim
+            
+            if self.with_unary:
+                unary = torch.bmm(query_mean.transpose(1,2),key)
+                unary = self.softmax(unary)
+                out_unary = torch.bmm(value, unary.permute(0,2,1)).unsqueeze(-1)
+                out_sim = out_sim + out_unary
 
         if self.with_gc:
             # [N, 1, H', W']
@@ -205,6 +212,6 @@ class _NonLocalNd_nowd(nn.Module):
 
 
 class NonLocal2d_nowd(_NonLocalNd_nowd):
-    def __init__(self, inplanes, planes, downsample=True, lr_mult=None, use_out=False, out_bn=False, whiten_type=['in_nostd'], weight_init_scale=1.0, with_gc=False, with_nl=True, eps=1e-5, nowd=['nl']):
-        super(NonLocal2d_nowd, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, weight_init_scale=weight_init_scale, with_gc=with_gc, with_nl=with_nl, eps=eps, nowd=nowd)
+    def __init__(self, inplanes, planes, downsample=True, lr_mult=None, use_out=False, out_bn=False, whiten_type=['in_nostd'], weight_init_scale=1.0, with_unary=False, with_gc=False, with_nl=True, eps=1e-5, nowd=['nl']):
+        super(NonLocal2d_nowd, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, weight_init_scale=weight_init_scale, with_unary=with_unary, with_gc=with_gc, with_nl=with_nl, eps=eps, nowd=nowd)
 
