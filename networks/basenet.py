@@ -137,6 +137,7 @@ class GCBModule(nn.Module):
                                        downsample=cfg.get('downsample', True),
                                        whiten_type=cfg.get('whiten_type',['ln_nostd']), 
                                        weight_init_scale=cfg.get('weight_init_scale', 1.0),
+                                       with_unary=cfg.get('with_unary', True),
                                        with_gc=cfg.get('with_gc', False),
                                        with_nl=cfg.get('with_nl', True),
                                        nowd=cfg.get('nowd', ['nl']),
