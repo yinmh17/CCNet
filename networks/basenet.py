@@ -13,7 +13,7 @@ import functools
 import sys, os
 
 from libs import InPlaceABN, InPlaceABNSync
-from ops import NonLocal2d, NonLocal2d_bn, NonLocal2d_nowd, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
+from ops import NonLocal2d, NonLocal2d_bn, NonLocal2d_nowd, NonLocal2d_nowd_mask, ContextBlock, MultiheadBlock, MultiheadSpatialBlock, MultiRelationBlock
 from ops import MultiheadRelationBlock, GloreUnit, ProjMultiheadBlock, ProjSpatialBlock, MaskNonLocal2d
 
 
@@ -120,7 +120,7 @@ class GCBModule(nn.Module):
     def __init__(self, in_channels, out_channels, num_classes, cfg):
         super(GCBModule, self).__init__()
         type = cfg.type
-        assert type in ['gcb', 'nl', 'nl_bn', 'nl_nowd', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'mask_nl']
+        assert type in ['gcb', 'nl', 'nl_bn', 'nl_nowd', 'nl_nowd_mask', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'mask_nl']
         inter_channels = in_channels // 4
         self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
                                    InPlaceABNSync(inter_channels))
@@ -143,6 +143,17 @@ class GCBModule(nn.Module):
                                        nowd=cfg.get('nowd', ['nl']),
                                        use_out=cfg.get('use_out', False),
                                        out_bn=cfg.get('out_bn', False))
+        elif type == 'nl_nowd_mask':
+            self.ctb = NonLocal2d_nowd_mask(inter_channels, inter_channels // 2,
+                                            downsample=cfg.get('downsample', True),
+                                            whiten_type=cfg.get('whiten_type',['ln_nostd']), 
+                                            weight_init_scale=cfg.get('weight_init_scale', 1.0),
+                                            with_gc=cfg.get('with_gc', True),
+                                            with_nl=cfg.get('with_nl', True),
+                                            nowd=cfg.get('nowd', ['nl']),
+                                            use_out=cfg.get('use_out', False),
+                                            out_bn=cfg.get('out_bn', False))
+                                            
         elif type == 'mask_nl':
             self.ctb = MaskNonLocal2d(inter_channels, inter_channels // 2, downsample=cfg.downsample, whiten_type=cfg.whiten_type, temperature=cfg.temp,
                                       use_out=cfg.use_out, out_bn=cfg.out_bn, mask_type=cfg.mask_type, use_key_mask=True, use_query_mask=False, mask_pos='after', use_softmax=True)
