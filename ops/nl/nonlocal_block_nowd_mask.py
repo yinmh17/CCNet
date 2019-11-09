@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn import init
 import math
 
-class _NonLocalNd_nowd(nn.Module):
+class _NonLocalNd_nowd_mask(nn.Module):
 
     def __init__(self, dim, inplanes, planes, downsample, lr_mult, use_out, out_bn, whiten_type, weight_init_scale, with_gc, with_nl, eps, nowd):
         assert dim in [1, 2, 3], "dim {} is not supported yet".format(dim)
@@ -198,6 +198,6 @@ class _NonLocalNd_nowd(nn.Module):
         return out
 
 
-class NonLocal2d_nowd(_NonLocalNd_nowd):
+class NonLocal2d_nowd_mask(_NonLocalNd_nowd_mask):
     def __init__(self, inplanes, planes, downsample=True, lr_mult=None, use_out=False, out_bn=False, whiten_type=['in_nostd'], weight_init_scale=1.0, with_gc=False, with_nl=True, eps=1e-5, nowd=['nl']):
-        super(NonLocal2d_nowd, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, weight_init_scale=weight_init_scale, with_gc=with_gc, with_nl=with_nl, eps=eps, nowd=nowd)
+        super(NonLocal2d_nowd_mask, self).__init__(dim=2, inplanes=inplanes, planes=planes, downsample=downsample, lr_mult=lr_mult, use_out=use_out, out_bn=out_bn, whiten_type=whiten_type, weight_init_scale=weight_init_scale, with_gc=with_gc, with_nl=with_nl, eps=eps, nowd=nowd)
