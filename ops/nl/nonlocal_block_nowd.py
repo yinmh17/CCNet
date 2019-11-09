@@ -182,6 +182,8 @@ class _NonLocalNd_nowd(nn.Module):
             out_sim = self.gamma * out_sim
             
             if self.with_unary:
+                if query_mean.shape[1] ==1:
+                    query_mean.expand(-1, key.shape[1], -1)
                 unary = torch.bmm(query_mean.transpose(1,2),key)
                 unary = self.softmax(unary)
                 out_unary = torch.bmm(value, unary.permute(0,2,1)).unsqueeze(-1)
