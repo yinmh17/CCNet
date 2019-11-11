@@ -194,9 +194,9 @@ class CSDataSet(data.Dataset):
         #------brighten--------------------------------------------
         if self.bright:
             shift = random.randint(-10, 10)
-            img[:, :, :] += shift
-            img = np.around(img)
-            img = np.clip(img, 0, 255)
+            image[:, :, :] += shift
+            image = np.around(image)
+            image = np.clip(image, 0, 255)
         #-----------------------------------------------------------
         image -= self.mean
         img_h, img_w = label.shape
