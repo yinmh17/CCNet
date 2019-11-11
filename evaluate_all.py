@@ -215,7 +215,7 @@ def main():
         model.eval()
         model.cuda()
 
-        testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, scale=False, mirror=False, use_zip=args.use_zip), 
+        testloader = data.DataLoader(CSDataSet(args.data_dir, args.data_list, crop_size=(1024, 2048), mean=IMG_MEAN, Bright=False, scale=False, mirror=False, use_zip=args.use_zip), 
                                         batch_size=1, shuffle=False, pin_memory=True)
 
         data_list = []
