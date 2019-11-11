@@ -120,10 +120,11 @@ class VOCDataTestSet(data.Dataset):
         return image, name, size
 
 class CSDataSet(data.Dataset):
-    def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), scale=True, mirror=True, ignore_label=255, use_zip=True):
+    def __init__(self, root, list_path, max_iters=None, crop_size=(321, 321), mean=(128, 128, 128), bright=True, scale=True, mirror=True, ignore_label=255, use_zip=True):
         self.root = root
         self.list_path = list_path
         self.crop_h, self.crop_w = crop_size
+        self.bright = bright
         self.scale = scale
         self.ignore_label = ignore_label
         self.mean = mean
@@ -191,10 +192,11 @@ class CSDataSet(data.Dataset):
             image, label = self.generate_scale_label(image, label)
         image = np.asarray(image, np.float32)
         #------brighten--------------------------------------------
-        shift = random.randint(-10, 10)
-        img[:, :, :] += shift
-        img = np.around(img)
-        img = np.clip(img, 0, 255)
+        if self.bright:
+            shift = random.randint(-10, 10)
+            img[:, :, :] += shift
+            img = np.around(img)
+            img = np.clip(img, 0, 255)
         #-----------------------------------------------------------
         image -= self.mean
         img_h, img_w = label.shape
