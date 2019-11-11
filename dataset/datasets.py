@@ -190,6 +190,12 @@ class CSDataSet(data.Dataset):
         if self.scale:
             image, label = self.generate_scale_label(image, label)
         image = np.asarray(image, np.float32)
+        #------brighten--------------------------------------------
+        shift = random.randint(-10, 10)
+        img[:, :, :] += shift
+        img = np.around(img)
+        img = np.clip(img, 0, 255)
+        #-----------------------------------------------------------
         image -= self.mean
         img_h, img_w = label.shape
         pad_h = max(self.crop_h - img_h, 0)
@@ -216,6 +222,7 @@ class CSDataSet(data.Dataset):
             flip = np.random.choice(2) * 2 - 1
             image = image[:, :, ::flip]
             label = label[:, ::flip]
+        
 
         return image.copy(), label.copy(), np.array(size), name
 
