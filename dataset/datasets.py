@@ -162,7 +162,7 @@ class CSDataSet(data.Dataset):
         return len(self.files)
 
     def generate_scale_label(self, image, label):
-        f_scale = 0.7 + random.randint(0, 14) / 10.0
+        f_scale = 0.5 + random.randint(0, 16) / 10.0
         image = cv2.resize(image, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_LINEAR)
         label = cv2.resize(label, None, fx=f_scale, fy=f_scale, interpolation = cv2.INTER_NEAREST)
         return image, label
